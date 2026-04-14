@@ -1,9 +1,13 @@
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
+import { BadgeNotifier } from '@/components/BadgeNotifier';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#121416]">
+      {/* Badge unlock notifier — headless, fires toasts on new badge awards */}
+      <BadgeNotifier />
+
       {/* Sidebar — visible lg+ only */}
       <Sidebar className="hidden lg:flex" />
 

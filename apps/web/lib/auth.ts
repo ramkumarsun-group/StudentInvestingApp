@@ -12,12 +12,22 @@ async function refreshAccessToken(token: Record<string, unknown>) {
     });
     if (!res.ok) throw new Error('Refresh failed');
     const json = await res.json();
+    // P6: re-decode isPro from the rotated access token so Pro upgrades take effect
+    // on the next token rotation without requiring a full re-login.
+    let isPro: boolean | undefined;
+    try {
+      const payload = JSON.parse(
+        Buffer.from(json.data.accessToken.split('.')[1], 'base64url').toString('utf-8'),
+      ) as { isPro?: boolean };
+      isPro = payload.isPro;
+    } catch { /* malformed token — keep existing isPro value */ }
     return {
       ...token,
       accessToken: json.data.accessToken,
       refreshToken: json.data.refreshToken,
       accessTokenExpiry: Date.now() + 14 * 60 * 1000,
       error: undefined,
+      ...(isPro !== undefined && { isPro }),
     };
   } catch {
     return { ...token, error: 'RefreshAccessTokenError' };
@@ -91,9 +101,16 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user }) {
-      // Initial sign-in — store tokens + expiry
+      // Initial sign-in — store tokens + expiry + isPro decoded from API JWT payload
       if (user) {
         const u = user as unknown as Record<string, string>;
+        let isPro = false;
+        try {
+          const payload = JSON.parse(
+            Buffer.from(u.accessToken.split('.')[1], 'base64url').toString('utf-8'),
+          ) as { isPro?: boolean };
+          isPro = payload.isPro ?? false;
+        } catch { /* malformed token — default false */ }
         return {
           ...token,
           accessToken: u.accessToken,
@@ -101,6 +118,7 @@ export const authOptions: NextAuthOptions = {
           accessTokenExpiry: Date.now() + 14 * 60 * 1000,
           role: u.role,
           userId: u.id,
+          isPro,
         };
       }
       // Token still valid
@@ -114,6 +132,7 @@ export const authOptions: NextAuthOptions = {
       session.accessToken = token.accessToken as string;
       session.user.role = token.role as string;
       session.user.id = token.userId as string;
+      session.user.isPro = (token.isPro as boolean) ?? false;
       if (token.error) session.error = token.error as string;
       return session;
     },
@@ -129,7 +148,14 @@ declare module 'next-auth' {
   interface Session {
     accessToken: string;
     error?: string;
-    user: { id: string; role: string; name?: string | null; email?: string | null; image?: string | null };
+    user: {
+      id: string;
+      role: string;
+      isPro: boolean;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
   }
 }
 
@@ -140,6 +166,7 @@ declare module 'next-auth/jwt' {
     accessTokenExpiry?: number;
     role?: string;
     userId?: string;
+    isPro?: boolean;
     error?: string;
   }
 }

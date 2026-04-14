@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS } from '@/lib/nav-items';
+import { useNotificationStore } from '@/lib/notification-store';
 
 export function BottomNav({ className }: { className?: string }) {
   const pathname = usePathname();
+  const { unreadCount } = useNotificationStore();
 
   return (
     // P1: base includes `flex` so the component is self-contained.
@@ -33,7 +35,12 @@ export function BottomNav({ className }: { className?: string }) {
               isActive ? 'text-[#acc7ff]' : 'text-[#8b909f]',
             )}
           >
-            <Icon size={20} />
+            <div className="relative">
+              <Icon size={20} />
+              {href === '/badges' && unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-[#1e2022]" />
+              )}
+            </div>
             <span className="text-[10px] font-medium">{label}</span>
           </Link>
         );

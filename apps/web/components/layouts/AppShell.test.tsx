@@ -7,6 +7,11 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
 }));
 
+// Mock BadgeNotifier — it uses useQueryClient which requires a provider
+vi.mock('@/components/BadgeNotifier', () => ({
+  BadgeNotifier: () => null,
+}));
+
 // Mock next-auth/react
 vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: { user: { name: 'Test User', email: 'test@example.com' } } }),

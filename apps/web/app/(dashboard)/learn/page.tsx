@@ -8,10 +8,18 @@ import apiClient from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import type { Module } from '@student-investing/shared-types';
 
-const DIFFICULTY_COLORS = {
+// P9: typed as Record so unknown difficulty falls through to the fallback
+const DIFFICULTY_COLORS: Record<string, string> = {
   beginner: 'text-emerald-400 bg-emerald-400/10',
   intermediate: 'text-yellow-400 bg-yellow-400/10',
   advanced: 'text-rose-400 bg-rose-400/10',
+};
+
+type ModuleWithMeta = Module & {
+  lesson_count: number;
+  completed_lessons: number;
+  completion_pct: number;
+  total_estimated_minutes: number;
 };
 
 export default function LearnPage() {
@@ -19,12 +27,14 @@ export default function LearnPage() {
 
   const { data } = useQuery({
     queryKey: ['modules'],
-    queryFn: () => apiClient.get('/learn/modules').then((r: { data: (Module & { lesson_count: number; completed_lessons: number; completion_pct: number; total_estimated_minutes: number })[] }) => r.data),
+    queryFn: () => apiClient.get('/learn/modules').then((r: { data: ModuleWithMeta[] }) => r.data),
   });
 
-  const modules = (data ?? []) as (Module & { lesson_count: number; completed_lessons: number; completion_pct: number; total_estimated_minutes: number })[];
+  const modules = (data ?? []) as ModuleWithMeta[];
+  // P8: each difficulty level gets its own section — intermediate no longer falls into "Advanced"
   const beginner = modules.filter((m) => m.difficulty === 'beginner');
-  const advanced = modules.filter((m) => m.difficulty !== 'beginner');
+  const intermediate = modules.filter((m) => m.difficulty === 'intermediate');
+  const advanced = modules.filter((m) => m.difficulty === 'advanced');
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -37,6 +47,7 @@ export default function LearnPage() {
       </div>
 
       <ModuleSection title="Beginner" modules={beginner} onProClick={() => setShowProModal(true)} />
+      {intermediate.length > 0 && <ModuleSection title="Intermediate" modules={intermediate} onProClick={() => setShowProModal(true)} />}
       {advanced.length > 0 && <ModuleSection title="Advanced" modules={advanced} onProClick={() => setShowProModal(true)} />}
 
       {showProModal && (
@@ -72,7 +83,7 @@ export default function LearnPage() {
   );
 }
 
-function ModuleSection({ title, modules, onProClick }: { title: string; modules: (Module & { lesson_count: number; completed_lessons: number; completion_pct: number; total_estimated_minutes: number })[]; onProClick: () => void }) {
+function ModuleSection({ title, modules, onProClick }: { title: string; modules: ModuleWithMeta[]; onProClick: () => void }) {
   return (
     <div>
       <h2 className="text-lg font-semibold text-white mb-4">{title} Modules</h2>
@@ -85,7 +96,8 @@ function ModuleSection({ title, modules, onProClick }: { title: string; modules:
             <>
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2">
-                  <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full capitalize', DIFFICULTY_COLORS[m.difficulty])}>
+                  {/* P9: fallback colour for any unknown difficulty value */}
+                  <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full capitalize', DIFFICULTY_COLORS[m.difficulty] ?? 'text-slate-400 bg-slate-400/10')}>
                     {m.difficulty}
                   </span>
                   {isLocked && (
@@ -107,10 +119,19 @@ function ModuleSection({ title, modules, onProClick }: { title: string; modules:
               <div className="mt-4">
                 <div className="flex justify-between text-xs text-slate-500 mb-1.5">
                   <span>{m.completed_lessons}/{m.lesson_count} lessons</span>
-                  <span>{m.completion_pct}%</span>
+                  {isComplete ? (
+                    <span className="text-green-400 font-medium">Complete ✓</span>
+                  ) : (
+                    <span>{m.completion_pct}%</span>
+                  )}
                 </div>
                 <div className="w-full h-1.5 bg-surface-800 rounded-full overflow-hidden">
+                  {/* P11: role="progressbar" + ARIA attributes for assistive technology */}
                   <div
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={m.completion_pct}
                     className={cn('h-full rounded-full transition-all', isComplete ? 'bg-emerald-500' : 'bg-brand-500')}
                     style={{ width: `${m.completion_pct}%` }}
                   />
@@ -124,9 +145,13 @@ function ModuleSection({ title, modules, onProClick }: { title: string; modules:
           );
 
           return isLocked ? (
+            // P10: role + tabIndex + keyboard handler make locked cards accessible
             <div
               key={m.slug}
               onClick={onProClick}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onProClick()}
+              role="button"
+              tabIndex={0}
               className="card p-5 hover:border-surface-700 transition-all group cursor-pointer opacity-60"
             >
               {cardContent}

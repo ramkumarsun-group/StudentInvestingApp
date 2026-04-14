@@ -1,11 +1,13 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Award } from 'lucide-react';
+import { Award, Share2 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import apiClient from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { timeAgo } from '@/lib/utils';
 import type { Badge } from '@student-investing/shared-types';
+import { generateBadgeCard } from '@/lib/badge-card';
 
 const RARITY_STYLES = {
   common: 'border-slate-700 bg-slate-800',
@@ -67,6 +69,45 @@ export default function BadgesPage() {
 }
 
 function BadgeCard({ badge, earned }: { badge: Badge & { earned_at?: string }; earned: boolean }) {
+  const { data: session } = useSession();
+
+  async function handleShare() {
+    // P2: wrap entire share flow in try/catch — Web Share API throws AbortError on user cancel
+    try {
+      const username = session?.user?.name ?? session?.user?.email ?? 'Student';
+      const blob = await generateBadgeCard({
+        name: badge.name,
+        icon: badge.iconUrl ?? '🏆',
+        rarity: badge.rarity,
+        username,
+      });
+      const file = new File([blob], `${badge.slug}-badge.png`, { type: 'image/png' });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          text: `I earned the ${badge.name} badge on StockPlay!`,
+        });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${badge.slug}-badge.png`;
+        // P4: append to DOM so Firefox honours programmatic .click() on detached anchors
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        // P3: defer revoke — revoking before the browser fetches the blob URL aborts the download
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      }
+    } catch (err) {
+      // Ignore AbortError (user cancelled share sheet); log unexpected errors
+      if ((err as { name?: string })?.name !== 'AbortError') {
+        console.error('Badge share failed:', err);
+      }
+    }
+  }
+
   return (
     <div className={cn(
       'rounded-xl p-4 border text-center transition-all',
@@ -86,6 +127,16 @@ function BadgeCard({ badge, earned }: { badge: Badge & { earned_at?: string }; e
       )}>
         {badge.rarity}
       </span>
+      {earned && (
+        <button
+          onClick={handleShare}
+          className="mt-3 flex items-center gap-1 text-xs text-slate-400 hover:text-white mx-auto transition-colors"
+          aria-label={`Share ${badge.name} badge`}
+        >
+          <Share2 size={12} />
+          Share
+        </button>
+      )}
     </div>
   );
 }

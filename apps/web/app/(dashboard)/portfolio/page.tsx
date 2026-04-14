@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw, BookOpen } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { formatUSD, formatPercent } from '@student-investing/shared-utils';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,15 @@ import {
 } from 'recharts';
 
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
+
+// Maps asset_type → the most relevant learn module slug.
+// Slugs match the seed data in apps/api/src/db/seeds/modules.seed.ts.
+// Falls back to /learn for unmapped types (e.g. 'bond').
+const ASSET_LEARN_MAP: Record<string, string> = {
+  stock: '/learn/intro-to-stocks',
+  etf: '/learn/intro-to-etfs',
+  crypto: '/learn/intro-to-crypto',
+};
 
 export default function PortfolioPage() {
   const qc = useQueryClient();
@@ -255,9 +265,20 @@ export default function PortfolioPage() {
                         onClick={() => router.push(`/trade/${h.symbol}?type=${h.asset_type}`)}
                       >
                         <td className="px-5 py-3">
-                          <div>
-                            <p className="font-semibold text-white">{h.symbol}</p>
-                            <p className="text-xs text-slate-500 uppercase">{h.asset_type}</p>
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <p className="font-semibold text-white">{h.symbol}</p>
+                              <p className="text-xs text-slate-500 uppercase">{h.asset_type}</p>
+                            </div>
+                            <Link
+                              href={ASSET_LEARN_MAP[h.asset_type] ?? '/learn'}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-slate-600 hover:text-brand-400 transition-colors"
+                              aria-label={`Learn about ${h.asset_type} investing`}
+                              title="Go to related lesson"
+                            >
+                              <BookOpen size={14} />
+                            </Link>
                           </div>
                         </td>
                         <td className="px-5 py-3 text-right text-slate-300 font-mono text-sm">{h.quantity}</td>

@@ -7,6 +7,7 @@ import apiClient from '@/lib/api-client';
 import { formatUSD, formatPercent } from '@student-investing/shared-utils';
 import PortfolioMiniChart from '@/components/charts/PortfolioMiniChart';
 import { cn } from '@/lib/utils';
+import { computeXpProgress } from '@/lib/learn-utils';
 
 export default function DashboardPage() {
   const { data: portfolio } = useQuery({
@@ -41,6 +42,7 @@ export default function DashboardPage() {
 
   const portfolioData = portfolio as { total_value: number; total_return_pct: number; virtual_cash: number } | undefined;
   const xpData = xp as { total_xp: number; current_level: number; level_name: string; xp_to_next_level: number } | undefined;
+  const xpProgress = xpData ? computeXpProgress(xpData.total_xp) : null;
   const streakData = streak as { current_streak: number; longest_streak: number } | undefined;
   const historyData = (history ?? []) as { value: number; date: string }[];
   const trendingData = (trending ?? []) as { symbol: string; price: number; change_pct: number }[];
@@ -81,23 +83,32 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               {/* XP Card */}
-              <div className="card p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap size={18} className="text-yellow-400" />
-                  <span className="font-semibold text-white">Level {xpData?.current_level ?? 1}</span>
-                  <span className="text-slate-400 text-sm">{xpData?.level_name}</span>
+              <div className="card p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap size={18} className="text-yellow-400" />
+                    <span className="font-semibold text-white">
+                      Lv.{xpProgress?.levelId ?? 1} {xpProgress?.levelName ?? 'Rookie'}
+                    </span>
+                  </div>
+                  <span className="text-sm text-slate-400">{xpProgress?.totalXp ?? 0} XP</span>
                 </div>
                 <div className="w-full h-2 bg-surface-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-brand-600 to-brand-400 rounded-full transition-all duration-1000"
+                    className="h-full rounded-full transition-all duration-1000"
                     style={{
-                      width: xpData
-                        ? `${Math.min(100, (xpData.total_xp / (xpData.total_xp + xpData.xp_to_next_level)) * 100)}%`
-                        : '0%',
+                      width: `${xpProgress?.pct ?? 0}%`,
+                      backgroundColor: xpProgress?.badgeColor ?? '#9CA3AF',
                     }}
                   />
                 </div>
-                <p className="text-xs text-slate-500 mt-1.5">{xpData?.total_xp ?? 0} XP total</p>
+                {xpProgress?.isMaxLevel ? (
+                  <p className="text-xs text-slate-400 text-right">Max Level</p>
+                ) : (
+                  <p className="text-xs text-slate-500 text-right">
+                    {xpProgress?.xpIntoLevel ?? 0}/{xpProgress?.xpNeeded ?? 500} XP to next level
+                  </p>
+                )}
               </div>
 
               {/* Streak Card */}

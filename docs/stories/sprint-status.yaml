@@ -1,5 +1,5 @@
 # generated: 2026-03-24
-# last_updated: 2026-03-31 (sprint planning refresh)
+# last_updated: 2026-04-12 (T2.13 code review patch pass → done; Thread 2 complete)
 # project: StockPlay
 # project_key: NOKEY
 # tracking_system: file-system
@@ -36,7 +36,7 @@
 # - Steel thread structure: T1 → T2 → T3 → T4 (threads can overlap from Week 3)
 
 generated: 2026-03-24
-last_updated: 2026-03-31
+last_updated: 2026-04-12
 project: StockPlay
 project_key: NOKEY
 tracking_system: file-system
@@ -75,21 +75,21 @@ development_status:
   # Demo: Complete lesson → Quiz → XP → Level up → Badge
   # Prerequisite: t1-1, t1-3 must be done
   # ─────────────────────────────────────────────────────────────
-  thread-2: in-progress
+  thread-2: done
 
-  t2-1-module-browser: review
-  t2-2-sequential-lesson-navigation: backlog
-  t2-3-lesson-content-renderer: backlog
-  t2-4-quiz-submission-and-scoring: backlog
-  t2-5-xp-award-system: backlog
-  t2-6-level-progression-and-level-up-notifications: backlog
-  t2-7-badge-catalog-and-display: backlog
-  t2-8-automatic-badge-award-engine: backlog
-  t2-9-daily-streak-tracking: backlog
-  t2-10-global-leaderboard: backlog
-  t2-11-learning-progress-tracking: backlog
-  t2-12-shareable-badge-cards-and-in-app-notifications: backlog
-  t2-13-portfolio-to-lesson-deep-linking-and-pro-module-gating: backlog
+  t2-1-module-browser: done
+  t2-2-sequential-lesson-navigation: done
+  t2-3-lesson-content-renderer: done
+  t2-4-quiz-submission-and-scoring: done
+  t2-5-xp-award-system: done
+  t2-6-level-progression-and-level-up-notifications: done
+  t2-7-badge-catalog-and-display: done
+  t2-8-automatic-badge-award-engine: done
+  t2-9-daily-streak-tracking: done
+  t2-10-global-leaderboard: done
+  t2-11-learning-progress-tracking: done
+  t2-12-shareable-badge-cards-and-in-app-notifications: done
+  t2-13-portfolio-to-lesson-deep-linking-and-pro-module-gating: done
 
   thread-2-retrospective: optional
 

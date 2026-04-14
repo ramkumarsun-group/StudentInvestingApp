@@ -1,6 +1,6 @@
 # Story T2.1: Module Browser
 
-**Status:** review
+**Status:** done
 **Epic:** Thread 2 — Learning & Gamification Loop
 **Sprint Key:** t2-1-module-browser
 **Date Prepared:** 2026-03-26

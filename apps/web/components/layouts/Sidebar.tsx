@@ -6,6 +6,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS } from '@/lib/nav-items';
+import { NotificationBell } from '@/components/NotificationBell';
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
@@ -72,6 +73,7 @@ export function Sidebar({ className }: { className?: string }) {
             </Link>
           );
         })}
+        <NotificationBell />
       </nav>
 
       {/* User menu — bottom */}

@@ -8,7 +8,12 @@ import { ChevronLeft, CheckCircle, Zap, AlertCircle, Info } from 'lucide-react';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { cn } from '@/lib/utils';
-import type { LessonBlock, Quiz } from '@student-investing/shared-types';
+import type { LessonBlock } from '@student-investing/shared-types';
+import { getNextLessonSlug, computeQuizScore, type QuizScoreResult } from '@/lib/learn-utils';
+import { LEVELS } from '@student-investing/shared-types';
+import { useNotificationStore } from '@/lib/notification-store';
+
+const MILESTONE_STREAKS = [3, 7, 14, 30, 60, 100];
 
 export default function LessonPage() {
   const { moduleSlug, lessonSlug } = useParams<{ moduleSlug: string; lessonSlug: string }>();
@@ -16,6 +21,7 @@ export default function LessonPage() {
   const qc = useQueryClient();
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [quizResults, setQuizResults] = useState<Record<string, { correct: boolean; explanation: string }>>({});
+  const [levelUpModal, setLevelUpModal] = useState<{ level: number; levelName: string; badgeColor: string } | null>(null);
 
   // Get lesson by slug via module
   const { data: moduleData } = useQuery({
@@ -34,41 +40,107 @@ export default function LessonPage() {
 
   const lesson = lessonData as {
     id: string; title: string; content_json: LessonBlock[]; xp_reward: number;
-    status: string; quizzes: Quiz[];
+    status: string; quizzes: ApiQuiz[];
   } | undefined;
 
-  // Auto-start when loaded
+  // P1 fix: only trigger on lessonId change (mount/lesson switch), not on every status update.
+  // lesson?.status removed from deps — server-side WHERE guard prevents regression.
+  // AbortController cancels the request if lessonId changes before it resolves.
   useEffect(() => {
-    if (lessonId && lesson?.status !== 'completed') {
-      apiClient.post(`/learn/lessons/${lessonId}/start`, {}).catch(() => {});
-    }
-  }, [lessonId, lesson?.status]);
+    if (!lessonId) return;
+    const controller = new AbortController();
+    apiClient.post(`/learn/lessons/${lessonId}/start`, {}, { signal: controller.signal }).catch(() => {});
+    return () => controller.abort();
+  }, [lessonId]);
 
   const completeMutation = useMutation({
     mutationFn: () => apiClient.post(`/learn/lessons/${lessonId}/complete`, {}),
-    onSuccess: (data: { data: { xpEarned: number } }) => {
-      toast.success(`+${data.data.xpEarned} XP earned!`);
+    onSuccess: async (data: { data: { xpEarned: number; leveledUp: boolean; newLevel: number } }) => {
+      if (data.data.xpEarned > 0) {
+        toast.success(`+${data.data.xpEarned} XP earned!`);
+      }
+      if (data.data.leveledUp) {
+        const lvl = LEVELS.find((l) => l.id === data.data.newLevel);
+        if (lvl) {
+          setLevelUpModal({ level: lvl.id, levelName: lvl.name, badgeColor: lvl.badgeColor });
+          useNotificationStore.getState().addNotification('level_up', `Level up! You're now a ${lvl.name} 🎉`);
+        }
+      }
       qc.invalidateQueries({ queryKey: ['modules'] });
+      qc.invalidateQueries({ queryKey: ['module', moduleSlug] });
+      // P3 fix: invalidate lesson cache so returning to this page shows correct status
+      qc.invalidateQueries({ queryKey: ['lesson', lessonId] });
       qc.invalidateQueries({ queryKey: ['xp'] });
-      router.push(`/learn/${moduleSlug}`);
+      qc.invalidateQueries({ queryKey: ['badges'] });
+
+      // Refetch streak and fire milestone toast before navigating.
+      // Guarded: a failed streak fetch must not block navigation (P1 review fix).
+      try {
+        await qc.refetchQueries({ queryKey: ['streak'] });
+        const freshStreak = qc.getQueryData<{ data: { current_streak: number } }>(['streak']);
+        const streakCount = freshStreak?.data?.current_streak ?? 0;
+        if (MILESTONE_STREAKS.includes(streakCount)) {
+          toast.success(`🔥 ${streakCount}-day streak! +${streakCount * 10} XP bonus`);
+          useNotificationStore.getState().addNotification('streak_milestone', `🔥 ${streakCount}-day streak! +${streakCount * 10} XP bonus`);
+        }
+      } catch { /* streak fetch failure must not block lesson navigation */ }
+
+      // P2 fix: read fresh cache value instead of stale closure
+      const freshMod = qc.getQueryData<{ lessons: { slug: string }[] }>(['module', moduleSlug]);
+      const nextSlug = getNextLessonSlug(freshMod?.lessons ?? [], lessonSlug);
+      if (nextSlug) {
+        router.push(`/learn/${moduleSlug}/${nextSlug}`);
+      } else {
+        router.push(`/learn/${moduleSlug}`);
+      }
     },
   });
 
   const quizMutation = useMutation({
     mutationFn: ({ quizId, optionId }: { quizId: string; optionId: string }) =>
       apiClient.post(`/learn/quizzes/${quizId}/submit`, { optionId }),
-    onSuccess: (data: { data: { correct: boolean; explanation: string; xpEarned: number } }, vars) => {
+    onSuccess: async (data: { data: { correct?: boolean; explanation: string; xpEarned?: number; leveledUp?: boolean; newLevel?: number; alreadyAnswered?: boolean } }, vars) => {
+      // alreadyAnswered means the server already has this result stored; correct is returned
+      // from the API so we can restore the right state on retry
       setQuizResults((prev) => ({
         ...prev,
-        [vars.quizId]: { correct: data.data.correct, explanation: data.data.explanation },
+        [vars.quizId]: { correct: !!data.data.correct, explanation: data.data.explanation },
       }));
-      if (data.data.correct) toast.success(`+${data.data.xpEarned} XP`);
+      if (data.data.correct && !data.data.alreadyAnswered) toast.success(`+${data.data.xpEarned} XP`);
+      if (data.data.leveledUp) {
+        const lvl = LEVELS.find((l) => l.id === data.data.newLevel);
+        if (lvl) {
+          setLevelUpModal({ level: lvl.id, levelName: lvl.name, badgeColor: lvl.badgeColor });
+          useNotificationStore.getState().addNotification('level_up', `Level up! You're now a ${lvl.name} 🎉`);
+        }
+      }
+      qc.invalidateQueries({ queryKey: ['xp'] });
+      qc.invalidateQueries({ queryKey: ['badges'] });
+      // P5: streak milestone is handled exclusively in completeMutation.onSuccess.
+      // Firing it here too caused a double notification when a lesson has quizzes,
+      // because both mutations fire in sequence on the same lesson completion.
+    },
+    // P6 fix: surface submission failures so user can retry
+    onError: (_err, vars) => {
+      setQuizAnswers((prev) => { const next = { ...prev }; delete next[vars.quizId]; return next; });
+      toast.error('Quiz submission failed. Please try again.');
     },
   });
 
   if (!lesson) return <div className="text-slate-400 text-center mt-20">Loading...</div>;
 
   const allQuizzesAnswered = lesson.quizzes.length === 0 || lesson.quizzes.every((q) => quizResults[q.id] !== undefined);
+
+  const quizScore: QuizScoreResult | null = allQuizzesAnswered && lesson.quizzes.length > 0
+    ? computeQuizScore(lesson.quizzes.map((q) => q.id), quizResults)
+    : null;
+
+  const canComplete = lesson.quizzes.length === 0 || (quizScore?.passed === true);
+
+  const handleRetryQuiz = () => {
+    setQuizAnswers({});
+    setQuizResults({});
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -101,7 +173,10 @@ export default function LessonPage() {
               quiz={quiz}
               selectedOptionId={quizAnswers[quiz.id]}
               result={quizResults[quiz.id]}
+              isSubmitting={quizMutation.isPending && quizMutation.variables?.quizId === quiz.id}
               onSelect={(optionId) => {
+                // P5 fix: drop duplicate taps while mutation is in-flight
+                if (quizMutation.isPending) return;
                 setQuizAnswers((prev) => ({ ...prev, [quiz.id]: optionId }));
                 quizMutation.mutate({ quizId: quiz.id, optionId });
               }}
@@ -110,10 +185,32 @@ export default function LessonPage() {
         </div>
       )}
 
+      {/* Quiz Score Summary */}
+      {quizScore && (
+        <div className={cn(
+          'card p-4 text-center space-y-2',
+          quizScore.passed ? 'border border-green-500/40' : 'border border-red-500/40',
+        )}>
+          <p className="text-lg font-semibold text-white">
+            {quizScore.correct}/{quizScore.total} correct — {quizScore.pct}%
+          </p>
+          {quizScore.passed ? (
+            <p className="text-green-400 font-medium">Passed ✓</p>
+          ) : (
+            <>
+              <p className="text-red-400 font-medium">Failed ✗ — need ≥70% to complete</p>
+              <button onClick={handleRetryQuiz} className="btn-secondary mt-2">
+                Retry Quiz
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Complete Button */}
       <button
         onClick={() => completeMutation.mutate()}
-        disabled={!allQuizzesAnswered || lesson.status === 'completed' || completeMutation.isPending}
+        disabled={!canComplete || lesson.status === 'completed' || completeMutation.isPending}
         className="btn-primary w-full py-3 flex items-center justify-center gap-2"
       >
         {lesson.status === 'completed' ? (
@@ -124,6 +221,30 @@ export default function LessonPage() {
           <><CheckCircle size={16} /> Complete Lesson</>
         )}
       </button>
+
+      {/* Level-Up Modal */}
+      {levelUpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="card p-8 max-w-sm w-full text-center space-y-4">
+            <div
+              className="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-2xl font-bold"
+              style={{ backgroundColor: levelUpModal.badgeColor + '33', border: `2px solid ${levelUpModal.badgeColor}` }}
+            >
+              {levelUpModal.level}
+            </div>
+            <h2 className="text-xl font-bold text-white">Level Up! 🎉</h2>
+            <p className="text-slate-300">
+              You&apos;re now a <span className="font-semibold text-white">{levelUpModal.levelName}</span>
+            </p>
+            <button
+              onClick={() => setLevelUpModal(null)}
+              className="btn-primary w-full"
+            >
+              Keep Learning
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -156,26 +277,36 @@ function ContentBlock({ block }: { block: LessonBlock }) {
   }
 }
 
+type ApiQuiz = {
+  id: string;
+  question_text: string;
+  options: { id: string; text: string }[];
+  explanation: string;
+  xp_reward: number;
+};
+
 function QuizBlock({
   quiz,
   selectedOptionId,
   result,
+  isSubmitting,
   onSelect,
 }: {
-  quiz: Quiz;
+  quiz: ApiQuiz;
   selectedOptionId?: string;
   result?: { correct: boolean; explanation: string };
+  isSubmitting: boolean;
   onSelect: (optionId: string) => void;
 }) {
   return (
     <div className="card p-5 space-y-4">
-      <p className="font-medium text-white">{quiz.questionText}</p>
+      <p className="font-medium text-white">{quiz.question_text}</p>
       <div className="space-y-2">
         {quiz.options.map((opt) => (
           <button
             key={opt.id}
-            onClick={() => !result && onSelect(opt.id)}
-            disabled={!!result}
+            onClick={() => !result && !isSubmitting && onSelect(opt.id)}
+            disabled={!!result || isSubmitting}
             className={cn(
               'w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors',
               !result && !selectedOptionId
