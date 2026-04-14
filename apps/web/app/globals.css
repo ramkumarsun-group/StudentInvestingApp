@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-surface-800;
+  }
+
+  body {
+    @apply bg-surface-950 text-slate-100;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-700 rounded-full;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-900 border border-surface-800 rounded-xl;
+  }
+
+  .btn-primary {
+    @apply bg-brand-600 hover:bg-brand-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-surface-800 hover:bg-surface-700 text-slate-200 font-medium px-4 py-2 rounded-lg transition-colors;
+  }
+
+  .btn-ghost {
+    @apply hover:bg-surface-800 text-slate-400 hover:text-slate-200 px-3 py-2 rounded-lg transition-colors;
+  }
+
+  .input {
+    @apply bg-surface-800 border border-surface-700 text-slate-100 placeholder-slate-500 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent;
+  }
+
+  .positive { @apply text-emerald-400; }
+  .negative { @apply text-rose-400; }
+  .neutral  { @apply text-slate-400; }
+}

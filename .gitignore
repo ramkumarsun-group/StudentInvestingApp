@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Turbo cache
+.turbo/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+
+# Claude Code internals
+.claude/
+
+# Obsidian
+.obsidian/
+
+# TypeScript build info
+*.tsbuildinfo
