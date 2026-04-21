@@ -1,6 +1,14 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { db } from '../config/db';
 import { recordActivity } from '../services/gamification/streak.service';
+import { awardXp } from '../services/gamification/xp.service';
+
+const xpAwardSchema = z.object({
+  event_type: z.string().min(1).max(40),
+  xp_amount: z.number().int().positive(),
+  reference_id: z.string().uuid().optional(),
+});
 
 export async function getXp(req: Request, res: Response) {
   const { rows } = await db.query(
@@ -34,6 +42,32 @@ export async function getStreak(req: Request, res: Response) {
 export async function recordActivityEndpoint(req: Request, res: Response) {
   const result = await recordActivity(req.user!.userId);
   return res.json({ data: result });
+}
+
+/**
+ * POST /gamification/xp/award
+ * Awards XP with optional idempotency key (reference_id).
+ * Returns 409 if the same reference_id has already been awarded for this user+event_type.
+ */
+export async function awardXpEndpoint(req: Request, res: Response) {
+  const body = xpAwardSchema.safeParse(req.body);
+  if (!body.success) return res.status(400).json({ error: body.error.flatten().fieldErrors });
+
+  try {
+    const result = await awardXp(
+      req.user!.userId,
+      body.data.event_type,
+      body.data.xp_amount,
+      body.data.reference_id,
+    );
+    return res.status(201).json({ data: result });
+  } catch (err) {
+    const typedErr = err as Error & { code?: string };
+    if (typedErr.code === 'XP_DUPLICATE') {
+      return res.status(409).json({ error: 'XP event already recorded for this reference_id' });
+    }
+    throw err;
+  }
 }
 
 export async function getXpLog(req: Request, res: Response) {

@@ -8,7 +8,12 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "db:migrate": "pnpm --filter api run db:migrate",
-    "db:seed": "pnpm --filter api run db:seed"
+    "db:seed": "pnpm --filter api run db:seed",
+    "db:seed:load-test": "NODE_ENV=test tsx apps/api/src/db/seeds/load-test-users.seed.ts",
+    "k6:load": "k6 run infra/k6/api-load.js",
+    "k6:cache": "k6 run infra/k6/redis-hit-rate.js",
+    "k6:leaderboard": "k6 run infra/k6/leaderboard-load.js",
+    "k6:all": "pnpm k6:load && pnpm k6:cache && pnpm k6:leaderboard"
   },
   "devDependencies": {
     "turbo": "^2.0.0",

@@ -59,6 +59,15 @@ export async function handleWebhook(req: Request, res: Response) {
     return res.status(400).json({ error: 'Webhook signature verification failed' });
   }
 
+  // Idempotency check — reject replayed events silently (R-03)
+  const alreadyProcessed = await db.query(
+    'SELECT 1 FROM processed_webhook_events WHERE stripe_event_id=$1',
+    [event.id],
+  );
+  if (alreadyProcessed.rows.length > 0) {
+    return res.json({ received: true }); // 200 — idempotent
+  }
+
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -89,6 +98,12 @@ export async function handleWebhook(req: Request, res: Response) {
       break;
     }
   }
+
+  // Mark event as processed
+  await db.query(
+    'INSERT INTO processed_webhook_events(stripe_event_id, event_type) VALUES($1,$2) ON CONFLICT DO NOTHING',
+    [event.id, event.type],
+  );
 
   return res.json({ received: true });
 }

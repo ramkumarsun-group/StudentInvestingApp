@@ -65,6 +65,13 @@ export async function awardXp(
     return { totalXp, newLevel, leveledUp: newLevel !== currentLevel };
   } catch (err) {
     await client.query('ROLLBACK');
+    // Surface idempotency violation as a typed error so controllers can return 409
+    const pgErr = err as { code?: string };
+    if (pgErr.code === '23505') {
+      const idempotencyError = new Error('XP event already recorded for this reference_id');
+      (idempotencyError as Error & { code: string }).code = 'XP_DUPLICATE';
+      throw idempotencyError;
+    }
     throw err;
   } finally {
     client.release();

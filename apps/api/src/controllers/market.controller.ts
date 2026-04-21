@@ -13,7 +13,9 @@ export async function getQuote(req: Request, res: Response) {
   // P-1: wrap getCachedQuote — Redis failure or JSON.parse error must not
   // produce an unhandled rejection in Express 4 (which does not auto-catch).
   try {
-    const quote = await getCachedQuote(symbol.toUpperCase(), assetType);
+    // R-08: use withMeta overload so we can set X-Cache header for k6 hit-rate detection.
+    const { quote, cacheHit } = await getCachedQuote(symbol.toUpperCase(), assetType, true);
+    res.setHeader('X-Cache', cacheHit ? 'HIT' : 'MISS');
     if (!quote) return res.status(404).json({ error: `No data for ${symbol}` });
     return res.json({ data: quote });
   } catch {

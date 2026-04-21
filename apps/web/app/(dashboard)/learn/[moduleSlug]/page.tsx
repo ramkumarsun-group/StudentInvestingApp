@@ -121,7 +121,7 @@ export default function ModulePage() {
   );
 }
 
-function LessonCard({
+export function LessonCard({
   lesson,
   index,
   moduleSlug,

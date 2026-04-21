@@ -15,6 +15,7 @@ import * as challenge from '../controllers/challenge.controller';
 import * as ai from '../controllers/ai.controller';
 import * as subscription from '../controllers/subscription.controller';
 import * as analytics from '../controllers/analytics.controller';
+import testRoutes from './test.routes';
 
 const router = Router();
 
@@ -61,6 +62,7 @@ router.get('/gamification/xp', authMiddleware, gamification.getXp);
 router.get('/gamification/badges', authMiddleware, gamification.getBadges);
 router.get('/gamification/streak', authMiddleware, gamification.getStreak);
 router.post('/gamification/activity', authMiddleware, gamification.recordActivityEndpoint);
+router.post('/gamification/xp/award', authMiddleware, gamification.awardXpEndpoint);
 router.get('/gamification/xp-log', authMiddleware, gamification.getXpLog);
 
 // ─── Leaderboard ──────────────────────────────────────────────────────────────
@@ -95,5 +97,8 @@ router.post('/subscriptions/portal', authMiddleware, subscription.createPortalSe
 router.get('/subscriptions/status', authMiddleware, subscription.getStatus);
 // Webhook has no JWT — raw body required, handled at app level
 router.post('/subscriptions/webhook', subscription.handleWebhook);
+
+// ─── Test helpers (NODE_ENV=test only) ───────────────────────────────────────
+router.use('/test', testRoutes);
 
 export default router;

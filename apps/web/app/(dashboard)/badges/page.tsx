@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { timeAgo } from '@/lib/utils';
 import type { Badge } from '@student-investing/shared-types';
 import { generateBadgeCard } from '@/lib/badge-card';
+import { downloadBadgeCard, shareBadge } from '@/lib/badge-share';
 
 const RARITY_STYLES = {
   common: 'border-slate-700 bg-slate-800',
@@ -72,39 +73,22 @@ function BadgeCard({ badge, earned }: { badge: Badge & { earned_at?: string }; e
   const { data: session } = useSession();
 
   async function handleShare() {
-    // P2: wrap entire share flow in try/catch — Web Share API throws AbortError on user cancel
-    try {
-      const username = session?.user?.name ?? session?.user?.email ?? 'Student';
-      const blob = await generateBadgeCard({
-        name: badge.name,
-        icon: badge.iconUrl ?? '🏆',
-        rarity: badge.rarity,
-        username,
-      });
-      const file = new File([blob], `${badge.slug}-badge.png`, { type: 'image/png' });
+    const username = session?.user?.name ?? session?.user?.email ?? 'Student';
+    const blob = await generateBadgeCard({
+      name: badge.name,
+      icon: badge.iconUrl ?? '🏆',
+      rarity: badge.rarity,
+      username,
+    });
+    const file = new File([blob], `${badge.slug}-badge.png`, { type: 'image/png' });
 
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          text: `I earned the ${badge.name} badge on StockPlay!`,
-        });
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${badge.slug}-badge.png`;
-        // P4: append to DOM so Firefox honours programmatic .click() on detached anchors
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        // P3: defer revoke — revoking before the browser fetches the blob URL aborts the download
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-      }
-    } catch (err) {
-      // Ignore AbortError (user cancelled share sheet); log unexpected errors
-      if ((err as { name?: string })?.name !== 'AbortError') {
-        console.error('Badge share failed:', err);
-      }
+    if (navigator.canShare?.({ files: [file] })) {
+      await shareBadge({
+        files: [file],
+        text: `I earned the ${badge.name} badge on StockPlay!`,
+      });
+    } else {
+      await downloadBadgeCard(blob, `${badge.slug}-badge.png`);
     }
   }
 

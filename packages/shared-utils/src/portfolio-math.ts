@@ -28,3 +28,17 @@ export function calcReturnPct(currentValue: number, startingValue: number): numb
   if (startingValue === 0) return 0;
   return ((currentValue - startingValue) / startingValue) * 100;
 }
+
+const SPREAD_PCT = 0.001; // 0.1% simulated spread — matches order.service.ts
+
+/**
+ * Apply the simulated paper-trading spread to a market price.
+ *
+ * Buy orders fill slightly above market (taker spread).
+ * Sell orders fill slightly below market (bid spread).
+ * Zero price returns zero to avoid NaN in downstream calculations.
+ */
+export function applySpread(price: number, side: 'buy' | 'sell'): number {
+  if (price === 0) return 0;
+  return side === 'buy' ? price * (1 + SPREAD_PCT) : price * (1 - SPREAD_PCT);
+}

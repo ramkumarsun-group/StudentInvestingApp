@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudentInvest — Project Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --surface:            #121416;
+      --surface-container:  #1e2124;
+      --surface-high:       #26292d;
+      --surface-bright:     #2e3237;
+      --primary:            #6c9aff;
+      --primary-dim:        #3d6fd4;
+      --secondary:          #9d7dea;
+      --tertiary:           #4ecdc4;
+      --on-surface:         #e8eaed;
+      --on-surface-variant: #9aa0a6;
+      --outline:            #3c4043;
+      --outline-variant:    #2e3237;
+      --done:               #34a853;
+      --review:             #fbbc04;
+      --backlog:            #5f6368;
+      --radius:             10px;
+    }
+
+    body {
+      background: var(--surface);
+      color: var(--on-surface);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 32px 24px;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--outline);
+    }
+    .header h1 { font-size: 22px; font-weight: 700; color: var(--on-surface); }
+    .header p  { color: var(--on-surface-variant); font-size: 13px; margin-top: 4px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface-high); border: 1px solid var(--outline);
+      border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--on-surface-variant);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-done    { background: var(--done); }
+    .dot-review  { background: var(--review); }
+    .dot-backlog { background: var(--backlog); }
+
+    /* ── Stat Cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface-container);
+      border: 1px solid var(--outline);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--on-surface-variant); margin-bottom: 8px; }
+    .stat-card .value { font-size: 32px; font-weight: 700; }
+    .stat-card .sub   { font-size: 12px; color: var(--on-surface-variant); margin-top: 4px; }
+    .value-done    { color: var(--done); }
+    .value-review  { color: var(--review); }
+    .value-backlog { color: var(--on-surface-variant); }
+    .value-total   { color: var(--primary); }
+
+    /* ── Two-column layout ── */
+    .two-col { display: grid; grid-template-columns: 1fr 360px; gap: 24px; margin-bottom: 24px; }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface-container);
+      border: 1px solid var(--outline);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--on-surface-variant); margin-bottom: 20px;
+    }
+
+    /* ── Thread progress rows ── */
+    .thread { margin-bottom: 20px; }
+    .thread:last-child { margin-bottom: 0; }
+    .thread-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .thread-name { font-weight: 600; font-size: 14px; }
+    .thread-meta { font-size: 12px; color: var(--on-surface-variant); }
+    .bar-track {
+      height: 8px; background: var(--surface-bright);
+      border-radius: 4px; overflow: hidden; display: flex;
+    }
+    .bar-seg { height: 100%; transition: width .4s ease; }
+    .bar-done   { background: var(--done); }
+    .bar-review { background: var(--review); }
+    .thread-chips { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .chip {
+      font-size: 11px; padding: 2px 8px; border-radius: 12px;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .chip-done   { background: rgba(52,168,83,.15);  color: var(--done); }
+    .chip-review { background: rgba(251,188,4,.15);  color: var(--review); }
+    .chip-backlog{ background: rgba(95,99,104,.15);  color: var(--on-surface-variant); }
+
+    /* ── Chart container ── */
+    .chart-wrap { position: relative; height: 260px; display: flex; align-items: center; justify-content: center; }
+
+    /* ── Story table ── */
+    .story-table { width: 100%; border-collapse: collapse; }
+    .story-table th {
+      text-align: left; font-size: 11px; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--on-surface-variant);
+      padding: 8px 12px; border-bottom: 1px solid var(--outline);
+    }
+    .story-table td { padding: 10px 12px; border-bottom: 1px solid var(--outline-variant); vertical-align: top; }
+    .story-table tr:last-child td { border-bottom: none; }
+    .story-table tr:hover td { background: var(--surface-high); }
+    .story-id { font-family: monospace; font-size: 11px; color: var(--on-surface-variant); white-space: nowrap; }
+    .story-name { font-size: 13px; }
+    .story-thread { font-size: 11px; color: var(--on-surface-variant); }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; white-space: nowrap;
+    }
+    .pill-done   { background: rgba(52,168,83,.15);  color: var(--done); }
+    .pill-review { background: rgba(251,188,4,.15);  color: var(--review); }
+    .pill-backlog{ background: rgba(95,99,104,.15);  color: var(--on-surface-variant); }
+
+    /* ── Filter tabs ── */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 6px 14px; border-radius: 20px; border: 1px solid var(--outline);
+      background: transparent; color: var(--on-surface-variant); font-size: 12px;
+      cursor: pointer; transition: all .15s;
+    }
+    .filter-btn:hover, .filter-btn.active { background: var(--surface-high); color: var(--on-surface); border-color: var(--primary); }
+
+    /* ── Full-width card ── */
+    .full-card { background: var(--surface-container); border: 1px solid var(--outline); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; overflow-x: auto; }
+
+    /* ── Linear note ── */
+    .linear-note {
+      background: rgba(108,154,255,.08); border: 1px solid rgba(108,154,255,.2);
+      border-radius: var(--radius); padding: 16px 20px; margin-bottom: 32px;
+      font-size: 13px; color: var(--on-surface-variant); display: flex; gap: 12px; align-items: flex-start;
+    }
+    .linear-note strong { color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <h1>📈 StudentInvest — Project Dashboard</h1>
+    <p>RAM team · StudentInvest project · Last synced: 14 Apr 2026</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <span class="badge"><span class="dot dot-done"></span>Done</span>
+    <span class="badge"><span class="dot dot-review"></span>In Review</span>
+    <span class="badge"><span class="dot dot-backlog"></span>Backlog</span>
+  </div>
+</div>
+
+<!-- Linear setup note -->
+<div class="linear-note">
+  <span>💡</span>
+  <div>
+    <strong>Set up native Linear views</strong> to mirror this dashboard in-app:
+    Go to <em>Views → New View</em> and create filtered views for each status (Done / In Review / Backlog), grouped by Milestone. Pin them to your sidebar for one-click access. Use <em>Roadmap</em> for a Gantt-style timeline of threads.
+  </div>
+</div>
+
+<!-- Stat cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="label">Total Stories</div>
+    <div class="value value-total">48</div>
+    <div class="sub">Across 4 threads</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Done</div>
+    <div class="value value-done">30</div>
+    <div class="sub">63% complete</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">In Review</div>
+    <div class="value value-review">1</div>
+    <div class="sub">Currently in flight</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Backlog</div>
+    <div class="value value-backlog">17</div>
+    <div class="sub">Not yet started</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">T2 Progress</div>
+    <div class="value value-done">100%</div>
+    <div class="sub">13 of 13 done</div>
+  </div>
+</div>
+
+<!-- Thread progress + Donut chart -->
+<div class="two-col">
+
+  <!-- Thread breakdown -->
+  <div class="card">
+    <div class="card-title">Thread Progress</div>
+
+    <!-- T1 -->
+    <div class="thread">
+      <div class="thread-header">
+        <span class="thread-name">🧵 T1 — Core Trading Loop</span>
+        <span class="thread-meta">17 / 18 done</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-seg bar-done"   style="width:94.4%"></div>
+        <div class="bar-seg bar-review" style="width:5.6%"></div>
+      </div>
+      <div class="thread-chips">
+        <span class="chip chip-done">   ✓ 17 Done</span>
+        <span class="chip chip-review"> ● 1 In Review</span>
+        <span class="chip chip-backlog">○ 0 Backlog</span>
+      </div>
+    </div>
+
+    <!-- T2 -->
+    <div class="thread">
+      <div class="thread-header">
+        <span class="thread-name">🧵 T2 — Learning & Gamification</span>
+        <span class="thread-meta">13 / 13 done</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-seg bar-done"   style="width:100%"></div>
+        <div class="bar-seg bar-review" style="width:0%"></div>
+      </div>
+      <div class="thread-chips">
+        <span class="chip chip-done">   ✓ 13 Done</span>
+        <span class="chip chip-review"> ● 0 In Review</span>
+        <span class="chip chip-backlog">○ 0 Backlog</span>
+      </div>
+    </div>
+
+    <!-- T3 -->
+    <div class="thread">
+      <div class="thread-header">
+        <span class="thread-name">🧵 T3 — Schools & Social</span>
+        <span class="thread-meta">0 / 10 done</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-seg bar-done"   style="width:0%"></div>
+        <div class="bar-seg bar-review" style="width:0%"></div>
+      </div>
+      <div class="thread-chips">
+        <span class="chip chip-done">   ✓ 0 Done</span>
+        <span class="chip chip-review"> ● 0 In Review</span>
+        <span class="chip chip-backlog">○ 10 Backlog</span>
+      </div>
+    </div>
+
+    <!-- T4 -->
+    <div class="thread">
+      <div class="thread-header">
+        <span class="thread-name">🧵 T4 — Monetisation & AI Loop</span>
+        <span class="thread-meta">0 / 7 done</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-seg bar-done"   style="width:0%"></div>
+        <div class="bar-seg bar-review" style="width:0%"></div>
+      </div>
+      <div class="thread-chips">
+        <span class="chip chip-done">   ✓ 0 Done</span>
+        <span class="chip chip-review"> ● 0 In Review</span>
+        <span class="chip chip-backlog">○ 7 Backlog</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Donut chart -->
+  <div class="card" style="display:flex;flex-direction:column;">
+    <div class="card-title">Overall Status Split</div>
+    <div class="chart-wrap">
+      <canvas id="donut"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bar chart — stories per thread -->
+<div class="card" style="margin-bottom:24px;">
+  <div class="card-title">Stories per Thread — Status Breakdown</div>
+  <div style="position:relative;height:220px;">
+    <canvas id="bar"></canvas>
+  </div>
+</div>
+
+<!-- Story table -->
+<div class="full-card">
+  <div class="card-title">All Stories</div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterTable('all',this)">All (48)</button>
+    <button class="filter-btn" onclick="filterTable('In Review',this)">In Review (1)</button>
+    <button class="filter-btn" onclick="filterTable('Done',this)">Done (30)</button>
+    <button class="filter-btn" onclick="filterTable('Backlog',this)">Backlog (17)</button>
+  </div>
+  <table class="story-table" id="story-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Story</th>
+        <th>Thread</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="story-tbody"></tbody>
+  </table>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const stories = [
+  // T1 — Core Trading Loop
+  { id:'RAM-10', name:'T1.1 — Student Registration with Email & Password', thread:'T1', status:'Done' },
+  { id:'RAM-5',  name:'T1.2 — Google OAuth Registration and Login',         thread:'T1', status:'Done' },
+  { id:'RAM-6',  name:'T1.3 — Secure Session Management and Logout',        thread:'T1', status:'Done' },
+  { id:'RAM-7',  name:'T1.4 — Age Verification and Under-18 Flagging',      thread:'T1', status:'Done' },
+  { id:'RAM-8',  name:'T1.5 — FERPA Compliance: DPA & No 3rd-Party Trackers',thread:'T1',status:'Done' },
+  { id:'RAM-9',  name:'T1.6 — Asset Search',                                thread:'T1', status:'Done' },
+  { id:'RAM-11', name:'T1.7 — Live Quote and Price Chart',                  thread:'T1', status:'Done' },
+  { id:'RAM-12', name:'T1.8 — Market Data Caching & API Failure Resilience',thread:'T1', status:'Done' },
+  { id:'RAM-13', name:'T1.9 — Buy Order Execution',                         thread:'T1', status:'Done' },
+  { id:'RAM-14', name:'T1.10 — Sell Order Execution',                       thread:'T1', status:'Done' },
+  { id:'RAM-15', name:'T1.11 — Portfolio Dashboard',                        thread:'T1', status:'Done' },
+  { id:'RAM-16', name:'T1.12 — Holdings Detail and Order History',          thread:'T1', status:'Done' },
+  { id:'RAM-17', name:'T1.13 — Portfolio History Chart & Asset Allocation', thread:'T1', status:'Done' },
+  { id:'RAM-18', name:'T1.14 — Portfolio Reset and Market News',            thread:'T1', status:'Done' },
+  { id:'RAM-49', name:'T1.15 — Responsive AppShell Layout',                 thread:'T1', status:'Done' },
+  { id:'RAM-50', name:'T1.16 — Desktop Onboarding Layout',                  thread:'T1', status:'Done' },
+  { id:'RAM-51', name:'T1.17 — Desktop Dashboard & Portfolio Layout',       thread:'T1', status:'Done' },
+  { id:'RAM-52', name:'T1.18 — Stitch Visual Fidelity Pass',                thread:'T1', status:'In Review' },
+  // T2 — Learning & Gamification
+  { id:'RAM-19', name:'T2.1 — Module Browser',                              thread:'T2', status:'Done' },
+  { id:'RAM-20', name:'T2.2 — Sequential Lesson Navigation',                thread:'T2', status:'Done' },
+  { id:'RAM-21', name:'T2.3 — Lesson Content Renderer',                     thread:'T2', status:'Done' },
+  { id:'RAM-22', name:'T2.4 — Quiz Submission and Scoring',                 thread:'T2', status:'Done' },
+  { id:'RAM-23', name:'T2.5 — XP Award System',                             thread:'T2', status:'Done' },
+  { id:'RAM-24', name:'T2.6 — Level Progression & Level-Up Notifications',  thread:'T2', status:'Done' },
+  { id:'RAM-25', name:'T2.7 — Badge Catalog and Display',                   thread:'T2', status:'Done' },
+  { id:'RAM-26', name:'T2.8 — Automatic Badge Award Engine',                thread:'T2', status:'Done' },
+  { id:'RAM-27', name:'T2.9 — Daily Streak Tracking',                       thread:'T2', status:'Done' },
+  { id:'RAM-28', name:'T2.10 — Global Leaderboard',                         thread:'T2', status:'Done' },
+  { id:'RAM-29', name:'T2.11 — Learning Progress Tracking',                 thread:'T2', status:'Done' },
+  { id:'RAM-30', name:'T2.12 — Shareable Badge Cards & In-App Notifications',thread:'T2',status:'Done' },
+  { id:'RAM-31', name:'T2.13 — Portfolio-to-Lesson Deep Linking & Pro Gating',thread:'T2',status:'Done' },
+  // T3 — Schools & Social
+  { id:'RAM-32', name:'T3.1 — Teacher Registration and Dashboard',          thread:'T3', status:'Backlog' },
+  { id:'RAM-33', name:'T3.2 — Class Creation and Join Code',                thread:'T3', status:'Backlog' },
+  { id:'RAM-34', name:'T3.3 — Student Class Enrollment via Join Code',      thread:'T3', status:'Backlog' },
+  { id:'RAM-35', name:'T3.4 — Class Roster and Progress Dashboard',         thread:'T3', status:'Backlog' },
+  { id:'RAM-36', name:'T3.5 — Class Leaderboard',                           thread:'T3', status:'Backlog' },
+  { id:'RAM-37', name:'T3.6 — Class Challenge Creation',                    thread:'T3', status:'Backlog' },
+  { id:'RAM-38', name:'T3.7 — Student Challenge View and Participation',    thread:'T3', status:'Backlog' },
+  { id:'RAM-39', name:'T3.8 — Class Progress Report Export',                thread:'T3', status:'Backlog' },
+  { id:'RAM-40', name:'T3.9 — User Profile Management & Account Deletion',  thread:'T3', status:'Backlog' },
+  { id:'RAM-41', name:'T3.10 — Parent Read-Only Dashboard',                 thread:'T3', status:'Backlog' },
+  // T4 — Monetisation & AI Loop
+  { id:'RAM-42', name:'T4.1 — Pro Tier Features Display & Upgrade Prompts', thread:'T4', status:'Backlog' },
+  { id:'RAM-43', name:'T4.2 — Stripe Subscription Checkout',                thread:'T4', status:'Backlog' },
+  { id:'RAM-44', name:'T4.3 — Subscription Management & Webhook Sync',      thread:'T4', status:'Backlog' },
+  { id:'RAM-45', name:'T4.4 — AI Coach Chat Interface',                     thread:'T4', status:'Backlog' },
+  { id:'RAM-46', name:'T4.5 — Streaming AI Responses with Portfolio Context',thread:'T4',status:'Backlog' },
+  { id:'RAM-47', name:'T4.6 — AI Educational Guardrails & Portfolio Review',thread:'T4', status:'Backlog' },
+  { id:'RAM-48', name:'T4.7 — AI Conversation History',                     thread:'T4', status:'Backlog' },
+];
+
+// ── Donut chart ───────────────────────────────────────────────────────────────
+new Chart(document.getElementById('donut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Done (30)', 'In Review (1)', 'Backlog (17)'],
+    datasets: [{
+      data: [30, 1, 17],
+      backgroundColor: ['#34a853', '#fbbc04', '#3c4043'],
+      borderColor: '#1e2124',
+      borderWidth: 3,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    cutout: '72%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: '#9aa0a6', font: { size: 12 }, padding: 16, boxWidth: 12 }
+      },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}` } }
+    }
+  }
+});
+
+// ── Bar chart ─────────────────────────────────────────────────────────────────
+new Chart(document.getElementById('bar'), {
+  type: 'bar',
+  data: {
+    labels: ['T1 — Core Trading', 'T2 — Learning & Gamification', 'T3 — Schools & Social', 'T4 — Monetisation & AI'],
+    datasets: [
+      { label: 'Done',      data: [17, 13,  0, 0], backgroundColor: '#34a853' },
+      { label: 'In Review', data: [1,   0,  0, 0], backgroundColor: '#fbbc04' },
+      { label: 'Backlog',   data: [0,   0, 10, 7], backgroundColor: '#3c4043' },
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { stacked: true, grid: { color: '#2e3237' }, ticks: { color: '#9aa0a6' } },
+      y: { stacked: true, grid: { color: '#2e3237' }, ticks: { color: '#9aa0a6', stepSize: 2 } },
+    },
+    plugins: {
+      legend: { labels: { color: '#9aa0a6', font: { size: 12 }, boxWidth: 12 } }
+    }
+  }
+});
+
+// ── Story table ───────────────────────────────────────────────────────────────
+const threadLabels = {
+  T1: '🧵 Core Trading Loop',
+  T2: '🧵 Learning & Gamification',
+  T3: '🧵 Schools & Social',
+  T4: '🧵 Monetisation & AI',
+};
+
+function pillClass(status) {
+  if (status === 'Done')      return 'pill-done';
+  if (status === 'In Review') return 'pill-review';
+  return 'pill-backlog';
+}
+function dotClass(status) {
+  if (status === 'Done')      return 'dot-done';
+  if (status === 'In Review') return 'dot-review';
+  return 'dot-backlog';
+}
+
+function renderTable(filter) {
+  const tbody = document.getElementById('story-tbody');
+  const rows = filter === 'all' ? stories : stories.filter(s => s.status === filter);
+  tbody.innerHTML = rows.map(s => `
+    <tr data-status="${s.status}">
+      <td><span class="story-id">${s.id}</span></td>
+      <td><span class="story-name">${s.name}</span></td>
+      <td><span class="story-thread">${threadLabels[s.thread]}</span></td>
+      <td>
+        <span class="status-pill ${pillClass(s.status)}">
+          <span class="dot ${dotClass(s.status)}"></span>${s.status}
+        </span>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterTable(status, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable(status);
+}
+
+renderTable('all');
+</script>
+</body>
+</html>
