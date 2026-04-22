@@ -143,10 +143,10 @@ pnpm dev
 
 Turborepo starts both apps in parallel:
 
-| App | URL | Description |
-|-----|-----|-------------|
+| App               | URL                   | Description       |
+| ----------------- | --------------------- | ----------------- |
 | **Web** (Next.js) | http://localhost:3000 | Student-facing UI |
-| **API** (Express) | http://localhost:4000 | REST API |
+| **API** (Express) | http://localhost:4000 | REST API          |
 
 The terminal uses Turborepo's TUI — you'll see logs for both `web` and `api` side by side. Press `q` to quit.
 

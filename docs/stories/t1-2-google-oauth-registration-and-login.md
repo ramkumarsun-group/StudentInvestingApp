@@ -1,6 +1,6 @@
 # Story T1.2: Google OAuth Registration and Login
 
-Status: review
+Status: done
 
 ## Story
 

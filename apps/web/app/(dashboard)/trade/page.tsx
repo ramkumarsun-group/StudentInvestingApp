@@ -100,7 +100,7 @@ export default function TradePage() {
         <div className="space-y-4">
           {/* Search */}
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
             <input
               className="input pl-9"
               placeholder="Search stocks, ETFs, crypto..."
@@ -108,11 +108,11 @@ export default function TradePage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery.length >= 2 && searchData.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-surface-800 border border-surface-700 rounded-xl shadow-xl z-10 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-surface-bright rounded-xl shadow-xl z-10 overflow-hidden">
                 {searchData.map((r) => (
                   <button
                     key={r.symbol}
-                    className="w-full text-left px-4 py-3 hover:bg-surface-700 transition-colors flex justify-between items-center"
+                    className="w-full text-left px-4 py-3 hover:bg-surface-bright transition-colors flex justify-between items-center"
                     onClick={() => {
                       // P-2: restore the T1.6 guard — SearchResult.assetType includes 'bond'
                       // which the [ticker] page and the market API do not support.
@@ -128,13 +128,13 @@ export default function TradePage() {
                   >
                     <div>
                       <span className="font-semibold text-white">{r.symbol}</span>
-                      <span className="text-slate-400 text-sm ml-2">{r.name}</span>
+                      <span className="text-on-surface-variant text-sm ml-2">{r.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {r.price !== undefined && (
                         <span className="text-sm text-white font-mono">{formatUSD(r.price)}</span>
                       )}
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-on-surface-variant">
                         {r.assetType === 'etf' ? 'ETF' : r.assetType.charAt(0).toUpperCase() + r.assetType.slice(1)}
                       </span>
                     </div>
@@ -145,12 +145,12 @@ export default function TradePage() {
             {/* P-6: !isSearchError prevents "No results found" from showing on API failure.
                 P-9: !isSearchFetching (not isLoading) prevents flash when stale cache revalidates. */}
             {searchQuery.length >= 2 && !isSearchFetching && !isSearchError && searchData.length === 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-surface-800 border border-surface-700 rounded-xl shadow-xl z-10 overflow-hidden">
-                <p className="px-4 py-3 text-sm text-slate-400">No results found</p>
+              <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-surface-bright rounded-xl shadow-xl z-10 overflow-hidden">
+                <p className="px-4 py-3 text-sm text-on-surface-variant">No results found</p>
               </div>
             )}
             {searchQuery.length >= 2 && isSearchError && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-surface-800 border border-surface-700 rounded-xl shadow-xl z-10 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-high border border-surface-bright rounded-xl shadow-xl z-10 overflow-hidden">
                 <p className="px-4 py-3 text-sm text-red-400">Search unavailable — please try again</p>
               </div>
             )}
@@ -178,8 +178,8 @@ export default function TradePage() {
                       className={cn(
                         'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
                         timeframe === tf
-                          ? 'bg-brand-600 text-white'
-                          : 'bg-surface-800 text-slate-400 hover:text-slate-200',
+                          ? 'bg-primary-container text-white'
+                          : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface',
                       )}
                     >
                       {tf}
@@ -208,9 +208,9 @@ export default function TradePage() {
                     'flex-1 py-2 rounded-lg font-semibold capitalize transition-colors',
                     side === s
                       ? s === 'buy'
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-rose-600 text-white'
-                      : 'bg-surface-800 text-slate-400',
+                        ? 'bg-positive text-surface'
+                        : 'bg-negative text-white'
+                      : 'bg-surface-container-high text-on-surface-variant',
                   )}
                 >
                   {s}
@@ -220,11 +220,11 @@ export default function TradePage() {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Symbol</label>
+                <label className="block text-sm text-on-surface-variant mb-1">Symbol</label>
                 <input className="input font-mono font-semibold" value={symbol} readOnly />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Shares / Units</label>
+                <label className="block text-sm text-on-surface-variant mb-1">Shares / Units</label>
                 <input
                   type="number"
                   className="input"
@@ -236,15 +236,15 @@ export default function TradePage() {
                 />
               </div>
               {orderTotal > 0 && (
-                <div className="bg-surface-800 rounded-lg p-3">
+                <div className="bg-surface-container-high rounded-lg p-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Est. Total</span>
+                    <span className="text-on-surface-variant">Est. Total</span>
                     <span className="text-white font-semibold">{formatUSD(orderTotal)}</span>
                   </div>
                   {portfolioData && (
                     <div className="flex justify-between text-xs mt-1">
-                      <span className="text-slate-500">Available Cash</span>
-                      <span className="text-slate-300">{formatUSD(portfolioData.virtual_cash)}</span>
+                      <span className="text-on-surface-variant">Available Cash</span>
+                      <span className="text-on-surface-variant">{formatUSD(portfolioData.virtual_cash)}</span>
                     </div>
                   )}
                 </div>
@@ -255,8 +255,8 @@ export default function TradePage() {
                 className={cn(
                   'w-full py-3 rounded-lg font-semibold transition-colors disabled:opacity-50',
                   side === 'buy'
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                    : 'bg-rose-600 hover:bg-rose-500 text-white',
+                    ? 'bg-positive hover:opacity-90 text-surface'
+                    : 'bg-negative hover:opacity-90 text-white',
                 )}
               >
                 {orderMutation.isPending
@@ -265,7 +265,7 @@ export default function TradePage() {
               </button>
             </div>
 
-            <p className="text-xs text-slate-500 mt-3 text-center">
+            <p className="text-xs text-on-surface-variant mt-3 text-center">
               Paper trading only — no real money
             </p>
           </div>
@@ -289,18 +289,18 @@ function HoldingsPanel({ symbol }: { symbol: string }) {
 
   return (
     <div className="card p-4">
-      <h3 className="text-sm font-medium text-slate-400 mb-2">Your Position</h3>
+      <h3 className="text-sm font-medium text-on-surface-variant mb-2">Your Position</h3>
       <div className="space-y-1.5">
         <div className="flex justify-between text-sm">
-          <span className="text-slate-400">Shares</span>
+          <span className="text-on-surface-variant">Shares</span>
           <span className="text-white">{holding.quantity}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-slate-400">Avg Cost</span>
+          <span className="text-on-surface-variant">Avg Cost</span>
           <span className="text-white">{formatUSD(holding.avg_cost_basis)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-slate-400">P&L</span>
+          <span className="text-on-surface-variant">P&L</span>
           <span className={holding.unrealized_pnl >= 0 ? 'positive' : 'negative'}>
             {formatUSD(holding.unrealized_pnl)} ({formatPercent(holding.unrealized_pnl_pct)})
           </span>

@@ -1,6 +1,6 @@
 # Story T1.6: Asset Search
 
-Status: review
+Status: done
 
 ## Story
 

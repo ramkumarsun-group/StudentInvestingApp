@@ -1,6 +1,6 @@
 # Story T1.12: Holdings Detail and Order History
 
-Status: review
+Status: done
 
 ## Dev Agent Record
 

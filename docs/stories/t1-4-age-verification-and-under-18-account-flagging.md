@@ -1,6 +1,6 @@
 # Story T1.4: Age Verification and Under-18 Account Flagging
 
-Status: review
+Status: done
 
 ## Story
 

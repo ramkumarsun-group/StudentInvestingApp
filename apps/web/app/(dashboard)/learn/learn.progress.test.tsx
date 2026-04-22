@@ -59,8 +59,9 @@ describe('LearnPage — progress display (AC1, AC2, AC4)', () => {
     expect(html).toContain('3/3 lessons');
   });
 
-  it('progress bar uses emerald colour for completed module', () => {
+  it('progress bar uses positive semantic token for completed module', () => {
+    // T1.18: migrated from bg-emerald-500 → bg-positive (Editorial Intelligence token)
     const html = renderToStaticMarkup(<LearnPage />);
-    expect(html).toContain('bg-emerald-500');
+    expect(html).toContain('bg-positive');
   });
 });

@@ -1,6 +1,6 @@
 # Story T1.11: Portfolio Dashboard
 
-Status: review
+Status: done
 
 ## Story
 

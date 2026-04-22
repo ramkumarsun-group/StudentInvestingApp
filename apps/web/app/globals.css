@@ -3,16 +3,54 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── Editorial Intelligence — dark mode token definitions ── */
+  /* P1: Values stored as RGB channel tuples (no `#` prefix) so Tailwind's   */
+  /*     /opacity modifier generates valid `rgb(R G B / alpha)` syntax.       */
   :root {
     color-scheme: dark;
+
+    /* Surface scale */
+    --color-surface:                18 20 22;     /* #121416 */
+    --color-surface-container:      30 32 34;     /* #1e2022 */
+    --color-surface-container-high: 40 42 44;     /* #282a2c */
+    --color-surface-bright:         55 57 59;     /* #37393b */
+
+    /* Brand */
+    --color-primary:                172 199 255;  /* #acc7ff */
+    --color-primary-container:      0 106 220;    /* #006adc */
+    --color-secondary:              190 198 220;  /* #bec6dc */
+    --color-secondary-container:    63 71 89;     /* #3f4759 */
+    --color-tertiary:               238 194 9;    /* #eec209 */
+    --color-tertiary-container:     74 57 0;      /* #4a3900 */
+
+    /* Text */
+    --color-on-surface:             226 226 229;  /* #e2e2e5 */
+    --color-on-surface-variant:     193 198 214;  /* #c1c6d6 */
+
+    /* Borders */
+    --color-outline:                139 144 159;  /* #8b909f */
+    --color-outline-variant:        65 71 83;     /* #414753 */
+
+    /* Semantic P&L */
+    --color-positive:               74 222 128;   /* #4ade80 */
+    --color-negative:               248 113 113;  /* #f87171 */
   }
 
-  * {
-    @apply border-surface-800;
+  /* P6: Narrowed from bare `*` to `*, ::before, ::after` to avoid clobbering  */
+  /*     SVG presentation attributes and third-party component border defaults. */
+  *, ::before, ::after {
+    border-color: rgb(var(--color-outline-variant));
   }
 
+  /* P6: SVG child elements should inherit border-color, not have it forced.   */
+  svg * {
+    border-color: inherit;
+  }
+
+  /* P3 (AC #3): body base styles declared here per AC; layout.tsx className   */
+  /*            supplements with font variables and antialiasing.               */
   body {
-    @apply bg-surface-950 text-slate-100;
+    @apply bg-surface text-on-surface;
   }
 
   /* Scrollbar */
@@ -20,35 +58,35 @@
     @apply w-1.5;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-surface-900;
+    @apply bg-surface-container;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-surface-700 rounded-full;
+    @apply bg-surface-bright rounded-full;
   }
 }
 
 @layer components {
   .card {
-    @apply bg-surface-900 border border-surface-800 rounded-xl;
+    @apply bg-surface-container border border-outline-variant rounded-xl;
   }
 
   .btn-primary {
-    @apply bg-brand-600 hover:bg-brand-500 text-white font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-primary-container hover:opacity-90 text-white font-semibold px-4 py-2 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-surface-800 hover:bg-surface-700 text-slate-200 font-medium px-4 py-2 rounded-lg transition-colors;
+    @apply bg-surface-container-high hover:bg-surface-bright text-on-surface font-medium px-4 py-2 rounded-lg transition-colors;
   }
 
   .btn-ghost {
-    @apply hover:bg-surface-800 text-slate-400 hover:text-slate-200 px-3 py-2 rounded-lg transition-colors;
+    @apply hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface px-3 py-2 rounded-lg transition-colors;
   }
 
   .input {
-    @apply bg-surface-800 border border-surface-700 text-slate-100 placeholder-slate-500 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent;
+    @apply bg-surface-bright border border-outline text-on-surface placeholder-on-surface-variant rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
   }
 
-  .positive { @apply text-emerald-400; }
-  .negative { @apply text-rose-400; }
-  .neutral  { @apply text-slate-400; }
+  .positive { @apply text-positive; }
+  .negative { @apply text-negative; }
+  .neutral  { @apply text-on-surface-variant; }
 }

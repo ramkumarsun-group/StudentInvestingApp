@@ -35,17 +35,17 @@ export function Sidebar({ className }: { className?: string }) {
     // passes `hidden lg:flex` to control visibility, which overrides safely.
     <aside
       className={cn(
-        'fixed left-0 top-0 h-full w-[220px] flex flex-col bg-[#1e2022] border-r border-[#2e3035] z-40',
+        'fixed left-0 top-0 h-full w-[220px] flex flex-col bg-surface-container border-r border-outline-variant z-40',
         className,
       )}
     >
       {/* Logo */}
-      <div className="p-5 border-b border-[#2e3035]">
+      <div className="p-5 border-b border-outline-variant">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#acc7ff] rounded-lg flex items-center justify-center font-bold text-sm text-[#121416]">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-bold text-sm text-surface font-display">
             SP
           </div>
-          <span className="font-bold text-white text-sm">StockPlay</span>
+          <span className="font-bold text-on-surface text-sm">StockPlay</span>
         </Link>
       </div>
 
@@ -64,8 +64,8 @@ export function Sidebar({ className }: { className?: string }) {
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full',
                 isActive
-                  ? 'text-[#acc7ff] bg-[#acc7ff]/10'
-                  : 'text-[#8b909f] hover:text-white hover:bg-white/5',
+                  ? 'text-primary bg-primary/10'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high',
               )}
             >
               <Icon size={18} />
@@ -77,19 +77,19 @@ export function Sidebar({ className }: { className?: string }) {
       </nav>
 
       {/* User menu — bottom */}
-      <div className="p-3 border-t border-[#2e3035]">
+      <div className="p-3 border-t border-outline-variant">
         <div className="flex items-center gap-2 px-3 py-2 mb-1">
-          <div className="w-7 h-7 bg-[#acc7ff]/20 rounded-full flex items-center justify-center text-xs font-bold text-[#acc7ff]">
+          <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center text-xs font-bold text-primary">
             {session?.user?.name?.[0]?.toUpperCase() ?? session?.user?.email?.[0]?.toUpperCase() ?? '?'}
           </div>
-          <span className="text-xs text-[#c1c6d6] truncate flex-1">
+          <span className="text-xs text-on-surface-variant truncate flex-1">
             {session?.user?.name ?? session?.user?.email ?? ''}
           </span>
         </div>
         <button
           onClick={handleSignOut}
           aria-label="Sign out"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[#8b909f] hover:text-white hover:bg-white/5 transition-colors w-full"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors w-full"
         >
           <LogOut size={16} />
           Sign out

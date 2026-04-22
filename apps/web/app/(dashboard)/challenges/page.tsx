@@ -49,7 +49,7 @@ export default function ChallengesPage() {
       </h1>
 
       {challenges.length === 0 ? (
-        <div className="card p-12 text-center text-slate-500">
+        <div className="card p-12 text-center text-on-surface-variant">
           No active challenges right now — check back soon!
         </div>
       ) : (
@@ -62,15 +62,15 @@ export default function ChallengesPage() {
                     {TYPE_LABELS[c.challenge_type] ?? c.challenge_type}
                   </span>
                   <h3 className="font-semibold text-white mt-2">{c.title}</h3>
-                  <p className="text-slate-400 text-sm mt-1">{c.description}</p>
+                  <p className="text-on-surface-variant text-sm mt-1">{c.description}</p>
                 </div>
-                <span className="text-brand-400 font-semibold text-sm flex items-center gap-1 shrink-0 ml-2">
+                <span className="text-primary font-semibold text-sm flex items-center gap-1 shrink-0 ml-2">
                   <Zap size={13} />
                   {c.xp_reward}
                 </span>
               </div>
 
-              <div className="flex items-center gap-4 text-xs text-slate-500">
+              <div className="flex items-center gap-4 text-xs text-on-surface-variant">
                 <span className="flex items-center gap-1">
                   <Clock size={12} />
                   {dayjs(c.ends_at).fromNow(true)} left
@@ -98,7 +98,7 @@ export default function ChallengesPage() {
               ) : (
                 <div className={cn(
                   'text-center text-sm py-2 rounded-lg',
-                  c.is_completed ? 'text-emerald-400 bg-emerald-400/10' : 'text-purple-400 bg-purple-400/10',
+                  c.is_completed ? 'text-positive bg-positive/10' : 'text-purple-400 bg-purple-400/10',
                 )}>
                   {c.is_completed ? '✅ Completed!' : '⚡ In Progress'}
                 </div>

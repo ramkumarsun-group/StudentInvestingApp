@@ -1,6 +1,6 @@
 # Story T1.9: Buy Order Execution
 
-Status: review
+Status: done
 
 ## Story
 

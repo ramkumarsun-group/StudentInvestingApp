@@ -10,7 +10,7 @@ interface Props {
 export default function StockChart({ data }: Props) {
   if (!data || data.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-slate-600 text-sm">
+      <div className="h-48 flex items-center justify-center text-on-surface-variant text-sm">
         No chart data available
       </div>
     );

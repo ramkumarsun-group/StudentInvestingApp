@@ -31,7 +31,14 @@ describe('AuthHeroPanel', () => {
   it('renders sparkline SVG visual element', () => {
     const html = renderToStaticMarkup(<AuthHeroPanel />);
     expect(html).toContain('<svg');
-    expect(html).toContain('stroke="#acc7ff"');
+    // P-16: assert the exact CSS variable name AND the variable is defined in globals.css
+    // (guards against misspelling —color-primry vs --color-primary)
+    expect(html).toContain('var(--color-primary)');
+    // Structural guard: globals.css must define --color-primary (not just referenced in JSX)
+    const fs = require('fs');
+    const path = require('path');
+    const css = fs.readFileSync(path.resolve(__dirname, '../../app/globals.css'), 'utf-8');
+    expect(css).toContain('--color-primary:');
   });
 
   it('applies className prop', () => {
@@ -39,8 +46,9 @@ describe('AuthHeroPanel', () => {
     expect(html).toContain('hidden lg:flex');
   });
 
-  it('uses primary design token color on portfolio value', () => {
+  it('uses primary semantic token class on portfolio value', () => {
     const html = renderToStaticMarkup(<AuthHeroPanel />);
-    expect(html).toContain('#acc7ff');
+    // Uses semantic token class text-primary rather than hard-coded hex
+    expect(html).toContain('text-primary');
   });
 });

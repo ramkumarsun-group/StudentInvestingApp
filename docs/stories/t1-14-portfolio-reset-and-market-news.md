@@ -1,6 +1,6 @@
 # Story T1.14: Portfolio Reset and Market News
 
-Status: review
+Status: done
 
 ## Dev Agent Record
 

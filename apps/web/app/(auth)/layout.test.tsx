@@ -33,10 +33,11 @@ describe('AuthLayout', () => {
     expect(html).toContain('flex flex-col items-center justify-center');
   });
 
-  it('uses surface background token', () => {
+  it('uses surface background token class', () => {
     const html = renderToStaticMarkup(
       <AuthLayout><span>form</span></AuthLayout>
     );
-    expect(html).toContain('#121416');
+    // Uses semantic token class bg-surface rather than hard-coded hex #121416
+    expect(html).toContain('bg-surface');
   });
 });

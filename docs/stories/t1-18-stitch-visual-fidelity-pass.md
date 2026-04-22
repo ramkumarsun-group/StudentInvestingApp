@@ -1,6 +1,6 @@
 # Story T1.18: Stitch Visual Fidelity Pass
 
-Status: review
+Status: done
 
 ## Story
 
@@ -378,3 +378,4 @@ claude-sonnet-4-6
 ## Change Log
 - 2026-04-02: Story created by Bob (SM) — Stitch visual fidelity pass for T1 screens (claude-sonnet-4-6)
 - 2026-04-02: T1.18 implemented — Editorial Intelligence tokens, Plus Jakarta Sans + Manrope fonts, full hex → semantic token migration across apps/web; 46/46 tests pass (claude-sonnet-4-6)
+- 2026-04-22: T1.18 code review — 16 patches applied: BadgeNotifier restored, Pro paywall tokens fixed, body rule added to globals.css, keyboard accessibility restored, intermediate section restored, computeXpProgress restored, ASSET_LEARN_MAP restored, progressbar ARIA restored, Complete ✓ state restored, DIFFICULTY_COLORS fallback restored, text-surface on dark buttons fixed, no-op hovers fixed, themeColor corrected; 147/147 tests pass (claude-sonnet-4-6)

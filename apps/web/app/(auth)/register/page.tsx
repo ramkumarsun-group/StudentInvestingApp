@@ -67,13 +67,13 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">StudentInvest</h1>
-          <p className="text-slate-400 mt-2">Create your free account</p>
+          <h1 className="text-3xl font-bold text-on-surface">StudentInvest</h1>
+          <p className="text-on-surface-variant mt-2">Create your free account</p>
         </div>
         <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">I am a</label>
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">I am a</label>
               <div className="grid grid-cols-2 gap-2">
                 {(['student', 'teacher'] as const).map((r) => (
                   <button
@@ -82,8 +82,8 @@ export default function RegisterPage() {
                     onClick={() => setForm({ ...form, role: r })}
                     className={`py-2 rounded-lg font-medium capitalize transition-colors ${
                       form.role === r
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-surface-800 text-slate-400 hover:text-slate-200'
+                        ? 'bg-primary-container text-white'
+                        : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
                     }`}
                   >
                     {r}
@@ -92,7 +92,7 @@ export default function RegisterPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Display Name / Username</label>
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">Display Name / Username</label>
               <input
                 type="text"
                 className="input"
@@ -104,7 +104,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">Email</label>
               <input
                 type="email"
                 className="input"
@@ -115,7 +115,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Date of Birth</label>
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">Date of Birth</label>
               <input
                 type="date"
                 className="input"
@@ -130,7 +130,7 @@ export default function RegisterPage() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">Password</label>
               <input
                 type="password"
                 className="input"
@@ -142,7 +142,7 @@ export default function RegisterPage() {
                 minLength={8}
               />
             </div>
-            <p className="text-xs text-slate-400 text-center">
+            <p className="text-xs text-on-surface-variant text-center">
               By registering, you agree to our{' '}
               <Link href="/legal/dpa" target="_blank" rel="noopener noreferrer" className="underline text-green-400">
                 Data Processing Agreement
@@ -155,10 +155,10 @@ export default function RegisterPage() {
           </form>
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-700" />
+              <span className="w-full border-t border-outline-variant" />
             </div>
-            <div className="relative flex justify-center text-xs text-slate-500">
-              <span className="bg-surface-900 px-2">or</span>
+            <div className="relative flex justify-center text-xs text-on-surface-variant">
+              <span className="bg-surface-container px-2">or</span>
             </div>
           </div>
           <button
@@ -174,9 +174,9 @@ export default function RegisterPage() {
             </svg>
             Continue with Google
           </button>
-          <p className="text-center text-slate-400 mt-4 text-sm">
+          <p className="text-center text-on-surface-variant mt-4 text-sm">
             Already have an account?{' '}
-            <Link href="/login" className="text-brand-400 hover:text-brand-300">
+            <Link href="/login" className="text-primary hover:text-primary">
               Sign in
             </Link>
           </p>
