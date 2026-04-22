@@ -1,6 +1,6 @@
 # Story T1.8: Market Data Caching and API Failure Resilience
 
-Status: review
+Status: done
 
 ## Story
 

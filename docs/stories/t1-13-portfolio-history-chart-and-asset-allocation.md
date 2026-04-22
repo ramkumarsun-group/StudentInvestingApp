@@ -1,6 +1,6 @@
 # Story T1.13: Portfolio History Chart and Asset Allocation
 
-Status: review
+Status: done
 
 ## Dev Agent Record
 

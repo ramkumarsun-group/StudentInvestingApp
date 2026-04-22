@@ -1,6 +1,6 @@
 # Story T1.5: FERPA Compliance — DPA and No Third-Party Trackers
 
-Status: review
+Status: done
 
 ## Story
 

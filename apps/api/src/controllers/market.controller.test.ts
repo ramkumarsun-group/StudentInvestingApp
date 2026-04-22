@@ -34,6 +34,7 @@ const mockRes = {
   status: vi.fn().mockReturnThis(),
   json: vi.fn().mockReturnThis(),
   send: vi.fn().mockReturnThis(),
+  setHeader: vi.fn(),
 } as unknown as Response;
 
 function makeReq(q: string): Request {
@@ -42,7 +43,8 @@ function makeReq(q: string): Request {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(getCachedQuote).mockResolvedValue(null);
+  // Default: withMeta overload returns { quote: null, cacheHit: false }
+  vi.mocked(getCachedQuote).mockResolvedValue({ quote: null, cacheHit: false } as never);
 });
 
 describe('searchTickers()', () => {
@@ -139,7 +141,8 @@ describe('searchTickers()', () => {
 
 describe('getQuote()', () => {
   it('returns 404 when getCachedQuote returns null', async () => {
-    vi.mocked(getCachedQuote).mockResolvedValue(null);
+    // getCachedQuote now uses withMeta=true overload → returns { quote, cacheHit }
+    vi.mocked(getCachedQuote).mockResolvedValue({ quote: null, cacheHit: false } as never);
     await getQuote(
       { params: { symbol: 'AAPL' }, query: { type: 'stock' } } as unknown as Request,
       mockRes,
@@ -148,15 +151,17 @@ describe('getQuote()', () => {
   });
 
   it('returns 200 with quote data including change and changePct', async () => {
-    vi.mocked(getCachedQuote).mockResolvedValue({
+    const mockQuote = {
       symbol: 'AAPL',
       name: 'AAPL',
       price: 190,
       change: 2.5,
       changePct: 1.3,
-      assetType: 'stock',
+      assetType: 'stock' as const,
       updatedAt: new Date().toISOString(),
-    });
+    };
+    // getCachedQuote withMeta=true overload returns { quote, cacheHit }
+    vi.mocked(getCachedQuote).mockResolvedValue({ quote: mockQuote, cacheHit: true } as never);
     await getQuote(
       { params: { symbol: 'AAPL' }, query: { type: 'stock' } } as unknown as Request,
       mockRes,

@@ -1,6 +1,6 @@
 # Story T1.10: Sell Order Execution
 
-Status: review
+Status: done
 
 ## Story
 

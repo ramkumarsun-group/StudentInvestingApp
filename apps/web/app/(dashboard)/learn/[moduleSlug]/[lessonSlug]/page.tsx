@@ -127,7 +127,7 @@ export default function LessonPage() {
     },
   });
 
-  if (!lesson) return <div className="text-slate-400 text-center mt-20">Loading...</div>;
+  if (!lesson) return <div className="text-on-surface-variant text-center mt-20">Loading...</div>;
 
   const allQuizzesAnswered = lesson.quizzes.length === 0 || lesson.quizzes.every((q) => quizResults[q.id] !== undefined);
 
@@ -144,14 +144,14 @@ export default function LessonPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <Link href={`/learn/${moduleSlug}`} className="flex items-center gap-1 text-slate-400 hover:text-slate-200 text-sm">
+      <Link href={`/learn/${moduleSlug}`} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-sm">
         <ChevronLeft size={16} />
         Back to module
       </Link>
 
       <div>
         <h1 className="text-2xl font-bold text-white">{lesson.title}</h1>
-        <span className="text-brand-400 text-sm font-semibold flex items-center gap-1 mt-1">
+        <span className="text-primary text-sm font-semibold flex items-center gap-1 mt-1">
           <Zap size={13} /> {lesson.xp_reward} XP reward
         </span>
       </div>
@@ -252,13 +252,13 @@ export default function LessonPage() {
 function ContentBlock({ block }: { block: LessonBlock }) {
   switch (block.type) {
     case 'text':
-      return <p className="text-slate-300 leading-relaxed">{block.content}</p>;
+      return <p className="text-on-surface-variant leading-relaxed">{block.content}</p>;
     case 'callout':
       return (
         <div className={cn(
           'flex gap-3 p-4 rounded-lg border',
           block.variant === 'warning' ? 'bg-yellow-400/5 border-yellow-400/20 text-yellow-300'
-            : block.variant === 'tip' ? 'bg-brand-400/5 border-brand-400/20 text-brand-300'
+            : block.variant === 'tip' ? 'bg-primary/5 border-primary/20 text-primary'
             : 'bg-blue-400/5 border-blue-400/20 text-blue-300',
         )}>
           <Info size={18} className="shrink-0 mt-0.5" />
@@ -267,9 +267,9 @@ function ContentBlock({ block }: { block: LessonBlock }) {
       );
     case 'key_term':
       return (
-        <div className="bg-surface-800 rounded-lg p-4 border-l-4 border-brand-500">
-          <p className="text-brand-400 font-semibold text-sm mb-1">{block.term}</p>
-          <p className="text-slate-300 text-sm">{block.definition}</p>
+        <div className="bg-surface-container-high rounded-lg p-4 border-l-4 border-primary-container">
+          <p className="text-primary font-semibold text-sm mb-1">{block.term}</p>
+          <p className="text-on-surface-variant text-sm">{block.definition}</p>
         </div>
       );
     default:
@@ -310,12 +310,12 @@ function QuizBlock({
             className={cn(
               'w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors',
               !result && !selectedOptionId
-                ? 'border-surface-700 text-slate-300 hover:border-brand-500 hover:text-white'
+                ? 'border-surface-bright text-on-surface-variant hover:border-primary-container hover:text-white'
                 : selectedOptionId === opt.id && result?.correct
-                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
+                ? 'border-emerald-500 bg-positive/10 text-emerald-300'
                 : selectedOptionId === opt.id && !result?.correct
-                ? 'border-rose-500 bg-rose-500/10 text-rose-300'
-                : 'border-surface-700 text-slate-500',
+                ? 'border-rose-500 bg-negative/10 text-rose-300'
+                : 'border-surface-bright text-on-surface-variant',
             )}
           >
             {opt.text}
@@ -325,7 +325,7 @@ function QuizBlock({
       {result && (
         <div className={cn(
           'flex gap-2 p-3 rounded-lg text-sm',
-          result.correct ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300',
+          result.correct ? 'bg-positive/10 text-emerald-300' : 'bg-negative/10 text-rose-300',
         )}>
           {result.correct ? <CheckCircle size={16} className="shrink-0 mt-0.5" /> : <AlertCircle size={16} className="shrink-0 mt-0.5" />}
           <p>{result.explanation}</p>

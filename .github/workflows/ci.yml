@@ -1,0 +1,188 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  # ─── Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter api exec tsc --noEmit
+      - run: pnpm --filter web exec tsc --noEmit
+
+  # ─── API Unit Tests ────────────────────────────────────────────────────────
+  test-api:
+    name: API Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: studentinvesting_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/studentinvesting_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-jwt-secret-32-chars-padded
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-32-chars-pad
+      INTERNAL_API_SECRET: ci-test-internal-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run DB migrations
+        run: pnpm --filter api db:migrate
+      - name: Run API tests
+        run: pnpm --filter api test
+
+  # ─── Web Unit Tests ────────────────────────────────────────────────────────
+  test-web:
+    name: Web Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run web tests
+        run: pnpm --filter web test
+
+  # ─── E2E Tests (2 shards) ─────────────────────────────────────────────────
+  e2e:
+    name: E2E (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+    runs-on: ubuntu-latest
+    needs: [lint, test-api, test-web]
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: studentinvesting_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      CI: true
+      SHARD_INDEX: ${{ matrix.shardIndex }}
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/studentinvesting_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-jwt-secret-32-chars-padded
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-32-chars-pad
+      JWT_EXPIRES_IN: 15m
+      REFRESH_EXPIRES_IN: 7d
+      NEXTAUTH_SECRET: ci-test-nextauth-secret
+      NEXTAUTH_URL: http://localhost:3000
+      INTERNAL_API_SECRET: ci-test-internal-secret
+      ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+      ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      ALPACA_BASE_URL: https://data.alpaca.markets
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+      NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_API_URL: http://localhost:4000/api/v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm --filter web exec playwright install chromium --with-deps
+      - name: Run DB migrations
+        run: pnpm --filter api db:migrate
+      - name: Start API server
+        run: pnpm --filter api start &
+        env:
+          NODE_ENV: test
+      - name: Wait for API
+        run: npx wait-on http://localhost:4000/api/v1/health --timeout 30000
+      - name: Build web app
+        run: pnpm --filter web build
+      - name: Start web server
+        run: pnpm --filter web start &
+      - name: Wait for web
+        run: npx wait-on http://localhost:3000 --timeout 30000
+      - name: Run Playwright E2E (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        run: pnpm --filter web exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-shard-${{ matrix.shardIndex }}
+          path: apps/web/playwright-report/
+          retention-days: 7

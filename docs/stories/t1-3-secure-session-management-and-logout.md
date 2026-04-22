@@ -1,6 +1,6 @@
 # Story T1.3: Secure Session Management and Logout
 
-Status: review
+Status: done
 
 ## Story
 

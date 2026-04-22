@@ -19,12 +19,32 @@ const BARS_TTL: Record<string, number> = {
 // Without this, every page mount during market closure would hammer Alpaca.
 const EMPTY_BARS_TTL = 300; // 5 min — avoids thrashing; short enough to recover on market open
 
-export async function getCachedQuote(symbol: string, assetType: AssetType): Promise<Quote | null> {
+// R-08: getCachedQuote now returns an object that includes a cacheHit flag so
+// the controller can set the X-Cache response header without duplicating lookup logic.
+export interface QuoteResult {
+  quote: Quote | null;
+  cacheHit: boolean;
+}
+
+export async function getCachedQuote(symbol: string, assetType: AssetType): Promise<Quote | null>;
+export async function getCachedQuote(
+  symbol: string,
+  assetType: AssetType,
+  withMeta: true,
+): Promise<QuoteResult>;
+export async function getCachedQuote(
+  symbol: string,
+  assetType: AssetType,
+  withMeta?: true,
+): Promise<Quote | null | QuoteResult> {
   // P-1: include assetType in key — prevents stock and crypto sharing the same
   // Redis entry when they have identical ticker strings (e.g. "BTC").
   const key = `quote:${assetType}:${symbol}`;
   const cached = await getCache<Quote>(key);
-  if (cached) return cached;
+
+  if (cached) {
+    return withMeta ? { quote: cached, cacheHit: true } : cached;
+  }
 
   let quote: Quote | null = null;
   if (assetType === 'crypto') {
@@ -35,7 +55,7 @@ export async function getCachedQuote(symbol: string, assetType: AssetType): Prom
   }
 
   if (quote) await setCache(key, quote, QUOTE_TTL);
-  return quote;
+  return withMeta ? { quote, cacheHit: false } : quote;
 }
 
 export async function getCachedBars(

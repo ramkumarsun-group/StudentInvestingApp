@@ -40,13 +40,13 @@ describe('Sidebar', () => {
   it('active link has primary color class when pathname matches', () => {
     // pathname mocked to /dashboard
     const html = renderToStaticMarkup(<Sidebar />);
-    // The /dashboard link should have the active token color
-    expect(html).toContain('text-[#acc7ff]');
+    // The /dashboard link should have the active semantic token class
+    expect(html).toContain('text-primary');
   });
 
-  it('inactive links have outline color class', () => {
+  it('inactive links have on-surface-variant color class', () => {
     const html = renderToStaticMarkup(<Sidebar />);
-    expect(html).toContain('text-[#8b909f]');
+    expect(html).toContain('text-on-surface-variant');
   });
 
   it('renders StockPlay logo and wordmark', () => {

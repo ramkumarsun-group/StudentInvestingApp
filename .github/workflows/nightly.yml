@@ -1,0 +1,375 @@
+name: Nightly — k6 Performance & Load Tests
+
+# Runs nightly at 02:00 UTC (off-peak; avoids market-hours Alpaca rate limits).
+# Can also be triggered manually for on-demand load testing.
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Which k6 suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - api-load
+          - redis-hit-rate
+          - leaderboard-load
+
+concurrency:
+  # Only one nightly run at a time; never cancel in-progress (could leave DB dirty)
+  group: nightly
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+  K6_VERSION: '0.51.0'
+
+jobs:
+  # ─── P3-001: API load test (50 VUs × 5 min) ──────────────────────────────────
+  # R-01: seed-load-test-data job removed; each k6 job seeds itself.
+  # Jobs now run in parallel with no needs: dependency.
+  k6-api-load:
+    name: P3-001 — API load (50 VU × 5 min)
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'api-load' || github.event_name == 'schedule' }}
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: studentinvesting_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/studentinvesting_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: nightly-test-jwt-secret-32-chars-pad
+      JWT_REFRESH_SECRET: nightly-test-refresh-secret-32chars
+      # R-05: shorter expiry so tokens stay valid across the 5m test; per-VU refresh is the safety net
+      JWT_EXPIRES_IN: 15m
+      REFRESH_EXPIRES_IN: 30m
+      INTERNAL_API_SECRET: nightly-test-internal-secret
+      ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+      ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      ALPACA_BASE_URL: https://data.alpaca.markets
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+      NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo 'deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main' \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Run DB migrations
+        run: pnpm --filter api db:migrate
+
+      - name: Seed load-test data
+        run: pnpm db:seed:load-test
+
+      # R-03: build before start so the compiled JS is present
+      - name: Build API
+        run: pnpm --filter api build
+
+      - name: Start API server
+        run: pnpm --filter api start &
+        env:
+          NODE_ENV: test
+
+      - name: Wait for API
+        run: npx wait-on http://localhost:4000/api/v1/health --timeout 30000
+
+      - name: Run k6 API load test (P3-001)
+        run: |
+          k6 run infra/k6/api-load.js \
+            -e BASE_URL=http://localhost:4000/api/v1 \
+            -e TEST_EMAIL=loadtest@example.com \
+            -e TEST_PASSWORD=LoadTest1234! \
+            --out json=k6-api-load-results.json \
+            --summary-export=k6-api-load-summary.json
+
+      - name: Post k6 summary to GitHub Actions summary
+        if: always()
+        run: |
+          echo "## P3-001 — API Load Test Results" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat k6-api-load-summary.json | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          metrics = d.get('metrics', {})
+          p95 = metrics.get('http_req_duration', {}).get('values', {}).get('p(95)', 'N/A')
+          err = metrics.get('http_req_failed', {}).get('values', {}).get('rate', 'N/A')
+          print(f'p(95) latency : {p95} ms')
+          print(f'Error rate    : {err}')
+          " 2>/dev/null || cat k6-api-load-summary.json
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload k6 results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-api-load-results
+          path: |
+            k6-api-load-results.json
+            k6-api-load-summary.json
+          retention-days: 30
+
+  # ─── P3-002: Redis cache hit rate ────────────────────────────────────────────
+  k6-redis-hit-rate:
+    name: P3-002 — Redis cache hit rate
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'redis-hit-rate' || github.event_name == 'schedule' }}
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: studentinvesting_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/studentinvesting_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: nightly-test-jwt-secret-32-chars-pad
+      JWT_REFRESH_SECRET: nightly-test-refresh-secret-32chars
+      # R-05: ensure token stays valid across the 4m test duration
+      JWT_EXPIRES_IN: 15m
+      REFRESH_EXPIRES_IN: 30m
+      INTERNAL_API_SECRET: nightly-test-internal-secret
+      ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+      ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      ALPACA_BASE_URL: https://data.alpaca.markets
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+      NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo 'deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main' \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Run DB migrations
+        run: pnpm --filter api db:migrate
+
+      - name: Seed load-test data
+        run: pnpm db:seed:load-test
+
+      # R-03: build before start so the compiled JS is present
+      - name: Build API
+        run: pnpm --filter api build
+
+      - name: Start API server
+        run: pnpm --filter api start &
+        env:
+          NODE_ENV: test
+
+      - name: Wait for API
+        run: npx wait-on http://localhost:4000/api/v1/health --timeout 30000
+
+      - name: Run k6 Redis hit-rate test (P3-002)
+        run: |
+          k6 run infra/k6/redis-hit-rate.js \
+            -e BASE_URL=http://localhost:4000/api/v1 \
+            -e TEST_EMAIL=loadtest@example.com \
+            -e TEST_PASSWORD=LoadTest1234! \
+            --summary-export=k6-redis-hit-rate-summary.json
+
+      - name: Post k6 summary to GitHub Actions summary
+        if: always()
+        run: |
+          echo "## P3-002 — Redis Cache Hit Rate Results" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat k6-redis-hit-rate-summary.json | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          metrics = d.get('metrics', {})
+          hit = metrics.get('cache_hit_rate', {}).get('values', {}).get('rate', 'N/A')
+          err = metrics.get('http_req_failed', {}).get('values', {}).get('rate', 'N/A')
+          print(f'Cache hit rate : {hit} (threshold: >=0.80)')
+          print(f'Error rate     : {err}')
+          " 2>/dev/null || cat k6-redis-hit-rate-summary.json
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload k6 results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-redis-hit-rate-results
+          path: k6-redis-hit-rate-summary.json
+          retention-days: 30
+
+  # ─── P3-003: Leaderboard with 1,000 users ────────────────────────────────────
+  k6-leaderboard:
+    name: P3-003 — Leaderboard (1,000 users)
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'leaderboard-load' || github.event_name == 'schedule' }}
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: studentinvesting_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/studentinvesting_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: nightly-test-jwt-secret-32-chars-pad
+      JWT_REFRESH_SECRET: nightly-test-refresh-secret-32chars
+      # R-05: ensure token stays valid across the 3m test duration
+      JWT_EXPIRES_IN: 15m
+      REFRESH_EXPIRES_IN: 30m
+      INTERNAL_API_SECRET: nightly-test-internal-secret
+      ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+      ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+      ALPACA_BASE_URL: https://data.alpaca.markets
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          # R-02: fixed typo /us/share → /usr/share in the tee command below
+          echo 'deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main' \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Run DB migrations
+        run: pnpm --filter api db:migrate
+
+      - name: Seed load-test data (1,000 users)
+        run: pnpm db:seed:load-test
+
+      # R-03: build before start so the compiled JS is present
+      - name: Build API
+        run: pnpm --filter api build
+
+      - name: Start API server
+        run: pnpm --filter api start &
+        env:
+          NODE_ENV: test
+
+      - name: Wait for API
+        run: npx wait-on http://localhost:4000/api/v1/health --timeout 30000
+
+      - name: Run k6 leaderboard load test (P3-003)
+        run: |
+          k6 run infra/k6/leaderboard-load.js \
+            -e BASE_URL=http://localhost:4000/api/v1 \
+            -e TEST_EMAIL=loadtest@example.com \
+            -e TEST_PASSWORD=LoadTest1234! \
+            --summary-export=k6-leaderboard-summary.json
+
+      - name: Post k6 summary to GitHub Actions summary
+        if: always()
+        run: |
+          echo "## P3-003 — Leaderboard Load Test Results" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat k6-leaderboard-summary.json | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          metrics = d.get('metrics', {})
+          p95 = metrics.get('http_req_duration', {}).get('values', {}).get('p(95)', 'N/A')
+          ordered = metrics.get('leaderboard_correct_order', {}).get('values', {}).get('rate', 'N/A')
+          err = metrics.get('http_req_failed', {}).get('values', {}).get('rate', 'N/A')
+          print(f'p(95) latency          : {p95} ms (threshold: <500ms)')
+          print(f'Correct order rate     : {ordered} (threshold: >=0.99)')
+          print(f'Error rate             : {err}')
+          " 2>/dev/null || cat k6-leaderboard-summary.json
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload k6 results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-leaderboard-results
+          path: k6-leaderboard-summary.json
+          retention-days: 30

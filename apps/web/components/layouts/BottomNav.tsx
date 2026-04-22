@@ -17,7 +17,7 @@ export function BottomNav({ className }: { className?: string }) {
     <nav
       aria-label="Mobile navigation"
       className={cn(
-        'fixed bottom-0 left-0 right-0 h-16 flex items-center justify-around pb-[env(safe-area-inset-bottom)] bg-[#1e2022] border-t border-[#2e3035] z-40',
+        'fixed bottom-0 left-0 right-0 h-16 flex items-center justify-around pb-[env(safe-area-inset-bottom)] bg-surface-container border-t border-outline-variant z-40',
         className,
       )}
     >
@@ -32,7 +32,7 @@ export function BottomNav({ className }: { className?: string }) {
             aria-current={isActive ? 'page' : undefined}
             className={cn(
               'flex flex-col items-center gap-0.5 px-2 py-1 transition-colors',
-              isActive ? 'text-[#acc7ff]' : 'text-[#8b909f]',
+              isActive ? 'text-primary' : 'text-on-surface-variant',
             )}
           >
             <div className="relative">

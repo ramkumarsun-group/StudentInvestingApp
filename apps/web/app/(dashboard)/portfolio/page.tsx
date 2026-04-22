@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown, RefreshCw, BookOpen } from 'lucide-react';
@@ -16,13 +15,12 @@ import {
 
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
 
-// Maps asset_type → the most relevant learn module slug.
-// Slugs match the seed data in apps/api/src/db/seeds/modules.seed.ts.
-// Falls back to /learn for unmapped types (e.g. 'bond').
+// P-07: contextual deep-links from holdings row → learn module (T2 feature, deferred scope)
 const ASSET_LEARN_MAP: Record<string, string> = {
-  stock: '/learn/intro-to-stocks',
-  etf: '/learn/intro-to-etfs',
-  crypto: '/learn/intro-to-crypto',
+  AAPL: 'stocks-fundamentals',
+  TSLA: 'growth-investing',
+  BTC: 'crypto-basics',
+  ETH: 'crypto-basics',
 };
 
 export default function PortfolioPage() {
@@ -160,7 +158,7 @@ export default function PortfolioPage() {
               { label: 'Cash Available', value: formatUSD(portfolioData?.virtual_cash ?? 0) },
             ].map(({ label, value, colored, positive }) => (
               <div key={label} className="card p-4">
-                <p className="text-slate-400 text-xs mb-1">{label}</p>
+                <p className="text-on-surface-variant text-xs mb-1">{label}</p>
                 <p className={cn('text-xl font-bold', colored ? (positive ? 'positive' : 'negative') : 'text-white')}>
                   {value}
                 </p>
@@ -208,7 +206,7 @@ export default function PortfolioPage() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[240px] flex items-center justify-center text-slate-500 text-sm">
+              <div className="h-[240px] flex items-center justify-center text-on-surface-variant text-sm">
                 History builds after your first trading day
               </div>
             )}
@@ -220,7 +218,7 @@ export default function PortfolioPage() {
           {/* Holdings / Order History Card with Tabs */}
           <div className="card overflow-hidden">
           {/* T1.12 Task 2: tab toggle */}
-          <div className="p-5 border-b border-surface-800 flex gap-4">
+          <div className="p-5 border-b border-surface-container-high flex gap-4">
             {(['holdings', 'orders'] as const).map((tab) => (
               <button
                 key={tab}
@@ -228,8 +226,8 @@ export default function PortfolioPage() {
                 className={cn(
                   'text-sm font-medium capitalize pb-1 border-b-2 transition-colors',
                   activeTab === tab
-                    ? 'border-brand-500 text-white'
-                    : 'border-transparent text-slate-400 hover:text-slate-200',
+                    ? 'border-primary-container text-white'
+                    : 'border-transparent text-on-surface-variant hover:text-on-surface',
                 )}
               >
                 {tab === 'holdings' ? 'Holdings' : 'Order History'}
@@ -240,14 +238,14 @@ export default function PortfolioPage() {
           {/* T1.12 Task 1 + 2: Holdings tab */}
           {activeTab === 'holdings' && (
             holdingsData.length === 0 ? (
-              <div className="p-8 text-center text-slate-500">
+              <div className="p-8 text-center text-on-surface-variant">
                 No holdings yet — go trade something!
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="text-xs text-slate-500 border-b border-surface-800">
+                    <tr className="text-xs text-on-surface-variant border-b border-surface-container-high">
                       <th className="text-left px-5 py-3">Symbol</th>
                       <th className="text-right px-5 py-3">Qty</th>
                       <th className="text-right px-5 py-3">Avg Cost</th>
@@ -261,28 +259,30 @@ export default function PortfolioPage() {
                       // T1.12 Task 1: clickable row → navigate to ticker page
                       <tr
                         key={h.symbol}
-                        className="border-b border-surface-800 hover:bg-surface-800/50 transition-colors cursor-pointer"
+                        className="border-b border-surface-container-high hover:bg-surface-container-high/50 transition-colors cursor-pointer"
                         onClick={() => router.push(`/trade/${h.symbol}?type=${h.asset_type}`)}
                       >
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
                             <div>
                               <p className="font-semibold text-white">{h.symbol}</p>
-                              <p className="text-xs text-slate-500 uppercase">{h.asset_type}</p>
+                              <p className="text-xs text-on-surface-variant uppercase">{h.asset_type}</p>
                             </div>
-                            <Link
-                              href={ASSET_LEARN_MAP[h.asset_type] ?? '/learn'}
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-slate-600 hover:text-brand-400 transition-colors"
-                              aria-label={`Learn about ${h.asset_type} investing`}
-                              title="Go to related lesson"
-                            >
-                              <BookOpen size={14} />
-                            </Link>
+                            {/* P-07: contextual learn link — deep-link to relevant module */}
+                            {ASSET_LEARN_MAP[h.symbol] && (
+                              <Link
+                                href={`/learn/${ASSET_LEARN_MAP[h.symbol]}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-on-surface-variant hover:text-primary transition-colors"
+                                title={`Learn about ${h.symbol}`}
+                              >
+                                <BookOpen size={13} />
+                              </Link>
+                            )}
                           </div>
                         </td>
-                        <td className="px-5 py-3 text-right text-slate-300 font-mono text-sm">{h.quantity}</td>
-                        <td className="px-5 py-3 text-right text-slate-300 font-mono text-sm">{formatUSD(h.avg_cost_basis)}</td>
+                        <td className="px-5 py-3 text-right text-on-surface-variant font-mono text-sm">{h.quantity}</td>
+                        <td className="px-5 py-3 text-right text-on-surface-variant font-mono text-sm">{formatUSD(h.avg_cost_basis)}</td>
                         <td className="px-5 py-3 text-right text-white font-mono text-sm">{formatUSD(h.current_price ?? 0)}</td>
                         <td className="px-5 py-3 text-right text-white font-mono text-sm">{formatUSD(h.market_value)}</td>
                         <td className="px-5 py-3 text-right font-mono text-sm">
@@ -302,14 +302,14 @@ export default function PortfolioPage() {
           {/* T1.12 Task 3: Order History tab */}
           {activeTab === 'orders' && (
             ordersData.length === 0 ? (
-              <div className="p-8 text-center text-slate-500">
+              <div className="p-8 text-center text-on-surface-variant">
                 No orders yet — make your first trade!
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="text-xs text-slate-500 border-b border-surface-800">
+                    <tr className="text-xs text-on-surface-variant border-b border-surface-container-high">
                       <th className="text-left px-5 py-3">Symbol</th>
                       <th className="text-left px-5 py-3">Side</th>
                       <th className="text-right px-5 py-3">Qty</th>
@@ -322,25 +322,25 @@ export default function PortfolioPage() {
                   </thead>
                   <tbody>
                     {ordersData.map((o) => (
-                      <tr key={o.id} className="border-b border-surface-800 hover:bg-surface-800/50 transition-colors">
+                      <tr key={o.id} className="border-b border-surface-container-high hover:bg-surface-container-high/50 transition-colors">
                         <td className="px-5 py-3">
                           <div>
                             <p className="font-semibold text-white">{o.symbol}</p>
-                            <p className="text-xs text-slate-500 uppercase">{o.asset_type}</p>
+                            <p className="text-xs text-on-surface-variant uppercase">{o.asset_type}</p>
                           </div>
                         </td>
                         <td className="px-5 py-3">
                           <span className={cn(
                             'text-xs font-semibold px-2 py-0.5 rounded-full',
                             o.side === 'buy'
-                              ? 'bg-emerald-400/10 text-emerald-400'
-                              : 'bg-rose-400/10 text-rose-400',
+                              ? 'bg-positive/10 text-positive'
+                              : 'bg-negative/10 text-negative',
                           )}>
                             {o.side.toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-right text-slate-300 font-mono text-sm">{o.quantity}</td>
-                        <td className="px-5 py-3 text-right text-slate-300 font-mono text-sm">
+                        <td className="px-5 py-3 text-right text-on-surface-variant font-mono text-sm">{o.quantity}</td>
+                        <td className="px-5 py-3 text-right text-on-surface-variant font-mono text-sm">
                           {o.fill_price != null ? formatUSD(o.fill_price) : '—'}
                         </td>
                         <td className="px-5 py-3 text-right text-white font-mono text-sm">
@@ -350,15 +350,15 @@ export default function PortfolioPage() {
                           <span className={cn(
                             'text-xs font-medium px-2 py-0.5 rounded-full',
                             o.status === 'filled'
-                              ? 'bg-emerald-400/10 text-emerald-400'
+                              ? 'bg-positive/10 text-positive'
                               : o.status === 'pending'
                               ? 'bg-yellow-400/10 text-yellow-400'
-                              : 'bg-slate-600/30 text-slate-400',
+                              : 'bg-slate-600/30 text-on-surface-variant',
                           )}>
                             {o.status}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-right text-slate-500 text-xs font-mono">
+                        <td className="px-5 py-3 text-right text-on-surface-variant text-xs font-mono">
                           {new Date(o.placed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </td>
                         <td className="px-5 py-3 text-right">
@@ -366,7 +366,7 @@ export default function PortfolioPage() {
                             <button
                               onClick={() => cancelMutation.mutate(o.id)}
                               disabled={cancelMutation.isPending}
-                              className="text-xs text-rose-400 hover:text-rose-300 font-medium transition-colors disabled:opacity-50"
+                              className="text-xs text-negative hover:text-rose-300 font-medium transition-colors disabled:opacity-50"
                             >
                               Cancel
                             </button>
@@ -449,7 +449,7 @@ export default function PortfolioPage() {
               </ResponsiveContainer>
               {/* T1.13 Task 3: active slice detail below chart */}
               {activeIndex !== null && pieData[activeIndex] && (
-                <div className="mt-3 text-center text-sm text-slate-300">
+                <div className="mt-3 text-center text-sm text-on-surface-variant">
                   <span className="font-semibold text-white">{pieData[activeIndex].name}</span>
                   {' · '}
                   {formatUSD(pieData[activeIndex].value)}
@@ -472,7 +472,7 @@ export default function PortfolioPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="card p-6 max-w-sm w-full mx-4 space-y-4">
             <h3 className="text-lg font-semibold text-white">Reset Portfolio?</h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-on-surface-variant">
               This will clear all holdings, orders, and history — resetting your balance to $100,000.
               This action cannot be undone.
             </p>
@@ -485,7 +485,7 @@ export default function PortfolioPage() {
               </button>
               <button
                 onClick={() => resetMutation.mutate()}
-                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-negative hover:opacity-90 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={resetMutation.isPending}
               >
                 {resetMutation.isPending ? 'Resetting…' : 'Reset Portfolio'}

@@ -8,19 +8,29 @@ import { cn } from '@/lib/utils';
 import { timeAgo } from '@/lib/utils';
 import type { Badge } from '@student-investing/shared-types';
 import { generateBadgeCard } from '@/lib/badge-card';
+import { downloadBadgeCard, shareBadge } from '@/lib/badge-share';
 
 const RARITY_STYLES = {
-  common: 'border-slate-700 bg-slate-800',
-  rare: 'border-blue-500/40 bg-blue-500/10',
-  epic: 'border-purple-500/40 bg-purple-500/10',
+  common:    'border-outline-variant bg-surface-container',
+  rare:      'border-blue-500/40 bg-blue-500/10',
+  epic:      'border-purple-500/40 bg-purple-500/10',
   legendary: 'border-yellow-500/40 bg-yellow-500/10',
 };
 
 const RARITY_TEXT = {
-  common: 'text-slate-400',
-  rare: 'text-blue-400',
-  epic: 'text-purple-400',
+  common:    'text-on-surface-variant',
+  rare:      'text-blue-400',
+  epic:      'text-purple-400',
   legendary: 'text-yellow-400',
+};
+
+// P3: Explicit per-rarity pill bg — avoids dynamic `RARITY_TEXT[x] + ' bg-current/10'`
+// which JIT can't scan and would emit an invalid class at build time.
+const RARITY_BADGE: Record<string, string> = {
+  common:    'text-on-surface-variant bg-on-surface-variant/10',
+  rare:      'text-blue-400 bg-blue-500/10',
+  epic:      'text-purple-400 bg-purple-500/10',
+  legendary: 'text-yellow-400 bg-yellow-500/10',
 };
 
 export default function BadgesPage() {
@@ -40,7 +50,7 @@ export default function BadgesPage() {
           <Award size={24} className="text-yellow-400" />
           Badges
         </h1>
-        <p className="text-slate-400 mt-1">
+        <p className="text-on-surface-variant mt-1">
           {earned.length}/{badges.length} earned
         </p>
       </div>
@@ -72,58 +82,41 @@ function BadgeCard({ badge, earned }: { badge: Badge & { earned_at?: string }; e
   const { data: session } = useSession();
 
   async function handleShare() {
-    // P2: wrap entire share flow in try/catch — Web Share API throws AbortError on user cancel
-    try {
-      const username = session?.user?.name ?? session?.user?.email ?? 'Student';
-      const blob = await generateBadgeCard({
-        name: badge.name,
-        icon: badge.iconUrl ?? '🏆',
-        rarity: badge.rarity,
-        username,
-      });
-      const file = new File([blob], `${badge.slug}-badge.png`, { type: 'image/png' });
+    const username = session?.user?.name ?? session?.user?.email ?? 'Student';
+    const blob = await generateBadgeCard({
+      name: badge.name,
+      icon: badge.iconUrl ?? '🏆',
+      rarity: badge.rarity,
+      username,
+    });
+    const file = new File([blob], `${badge.slug}-badge.png`, { type: 'image/png' });
 
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          text: `I earned the ${badge.name} badge on StockPlay!`,
-        });
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${badge.slug}-badge.png`;
-        // P4: append to DOM so Firefox honours programmatic .click() on detached anchors
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        // P3: defer revoke — revoking before the browser fetches the blob URL aborts the download
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-      }
-    } catch (err) {
-      // Ignore AbortError (user cancelled share sheet); log unexpected errors
-      if ((err as { name?: string })?.name !== 'AbortError') {
-        console.error('Badge share failed:', err);
-      }
+    if (navigator.canShare?.({ files: [file] })) {
+      await shareBadge({
+        files: [file],
+        text: `I earned the ${badge.name} badge on StockPlay!`,
+      });
+    } else {
+      await downloadBadgeCard(blob, `${badge.slug}-badge.png`);
     }
   }
 
   return (
     <div className={cn(
       'rounded-xl p-4 border text-center transition-all',
-      earned ? RARITY_STYLES[badge.rarity] : 'border-surface-800 bg-surface-900 opacity-50 grayscale',
+      earned ? RARITY_STYLES[badge.rarity] : 'border-surface-container-high bg-surface-container opacity-50 grayscale',
     )}>
       <div className="text-3xl mb-2">{badge.iconUrl ?? '🏆'}</div>
-      <p className={cn('text-sm font-semibold', earned ? RARITY_TEXT[badge.rarity] : 'text-slate-600')}>
+      <p className={cn('text-sm font-semibold', earned ? RARITY_TEXT[badge.rarity] : 'text-on-surface-variant')}>
         {badge.name}
       </p>
-      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{badge.description}</p>
+      <p className="text-xs text-on-surface-variant mt-1 line-clamp-2">{badge.description}</p>
       {earned && badge.earned_at && (
-        <p className="text-xs text-slate-600 mt-2">Earned {timeAgo(badge.earned_at)}</p>
+        <p className="text-xs text-on-surface-variant mt-2">Earned {timeAgo(badge.earned_at)}</p>
       )}
       <span className={cn(
         'inline-block text-xs px-2 py-0.5 rounded-full mt-2 capitalize',
-        earned ? RARITY_TEXT[badge.rarity] + ' bg-current/10' : 'text-slate-600',
+        earned ? RARITY_BADGE[badge.rarity] : 'text-on-surface-variant',
       )}>
         {badge.rarity}
       </span>

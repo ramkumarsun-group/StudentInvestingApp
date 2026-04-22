@@ -40,46 +40,46 @@ export default function LeaderboardPage() {
         </h1>
         {myRankData && (
           <div className="card px-4 py-2 text-sm">
-            <span className="text-slate-400">Your rank: </span>
+            <span className="text-on-surface-variant">Your rank: </span>
             <span className="text-white font-bold">#{myRankData.rank}</span>
           </div>
         )}
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-surface-800 grid grid-cols-12 text-xs text-slate-500 font-medium">
+        <div className="p-4 border-b border-surface-container-high grid grid-cols-12 text-xs text-on-surface-variant font-medium">
           <span className="col-span-1 text-center">Rank</span>
           <span className="col-span-5">Investor</span>
           <span className="col-span-3 text-right">Portfolio</span>
           <span className="col-span-3 text-right">Return</span>
         </div>
-        <div className="divide-y divide-surface-800">
+        <div className="divide-y divide-surface-container-high">
           {entries.map((entry) => {
             const isPositive = entry.return_pct >= 0;
             const emoji = rankEmoji(entry.rank);
             return (
               <div
                 key={entry.user_id}
-                className="grid grid-cols-12 items-center px-4 py-3.5 hover:bg-surface-800/50 transition-colors"
+                className="grid grid-cols-12 items-center px-4 py-3.5 hover:bg-surface-container-high/50 transition-colors"
               >
                 <div className="col-span-1 text-center">
                   {emoji ? (
                     <span className="text-lg">{emoji}</span>
                   ) : (
-                    <span className="text-slate-500 text-sm font-mono">{entry.rank}</span>
+                    <span className="text-on-surface-variant text-sm font-mono">{entry.rank}</span>
                   )}
                 </div>
                 <div className="col-span-5 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-brand-700 flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-xs font-bold shrink-0">
                     {entry.username[0].toUpperCase()}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-white">{entry.username}</p>
-                    <p className="text-xs text-slate-500">Lv.{entry.current_level} {entry.level_name}</p>
+                    <p className="text-xs text-on-surface-variant">Lv.{entry.current_level} {entry.level_name}</p>
                   </div>
                 </div>
                 <div className="col-span-3 text-right">
-                  <span className="text-sm text-slate-300 font-mono">{formatUSD(entry.total_value)}</span>
+                  <span className="text-sm text-on-surface-variant font-mono">{formatUSD(entry.total_value)}</span>
                 </div>
                 <div className={cn('col-span-3 text-right flex items-center justify-end gap-1 text-sm font-mono font-semibold', isPositive ? 'positive' : 'negative')}>
                   {isPositive ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
@@ -89,7 +89,7 @@ export default function LeaderboardPage() {
             );
           })}
           {entries.length === 0 && (
-            <div className="p-8 text-center text-slate-500">
+            <div className="p-8 text-center text-on-surface-variant">
               No data yet — be the first to trade!
             </div>
           )}

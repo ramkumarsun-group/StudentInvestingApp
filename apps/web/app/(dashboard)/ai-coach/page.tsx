@@ -40,11 +40,11 @@ function ProGate() {
 
   return (
     <div className="max-w-2xl mx-auto mt-20 text-center space-y-6">
-      <div className="w-20 h-20 bg-brand-600/20 rounded-full flex items-center justify-center mx-auto">
-        <Sparkles size={36} className="text-brand-400" />
+      <div className="w-20 h-20 bg-primary-container/20 rounded-full flex items-center justify-center mx-auto">
+        <Sparkles size={36} className="text-primary" />
       </div>
       <h1 className="text-3xl font-bold text-white">AI Investing Coach</h1>
-      <p className="text-slate-400 text-lg">
+      <p className="text-on-surface-variant text-lg">
         Get personalized portfolio feedback, ask anything about investing, and accelerate your learning with Claude AI.
       </p>
       <div className="card p-6 text-left space-y-3">
@@ -54,8 +54,8 @@ function ProGate() {
           'Contextual explanations tied to your level',
           'All advanced learning modules unlocked',
         ].map((f) => (
-          <div key={f} className="flex items-center gap-3 text-sm text-slate-300">
-            <span className="text-brand-400">✓</span>
+          <div key={f} className="flex items-center gap-3 text-sm text-on-surface-variant">
+            <span className="text-primary">✓</span>
             {f}
           </div>
         ))}
@@ -68,7 +68,7 @@ function ProGate() {
         >
           {isPending ? 'Redirecting...' : 'Upgrade to Student Pro — $4.99/mo'}
         </button>
-        <p className="text-slate-500 text-sm mt-2">Cancel anytime</p>
+        <p className="text-on-surface-variant text-sm mt-2">Cancel anytime</p>
       </div>
     </div>
   );
@@ -157,12 +157,12 @@ function ChatInterface() {
   return (
     <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-brand-600/20 rounded-full flex items-center justify-center">
-          <Sparkles size={20} className="text-brand-400" />
+        <div className="w-10 h-10 bg-primary-container/20 rounded-full flex items-center justify-center">
+          <Sparkles size={20} className="text-primary" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white">AI Investing Coach</h1>
-          <p className="text-xs text-slate-500">Powered by Claude</p>
+          <p className="text-xs text-on-surface-variant">Powered by Claude</p>
         </div>
       </div>
 
@@ -172,7 +172,7 @@ function ChatInterface() {
           <button
             key={q}
             onClick={() => { setInput(q); }}
-            className="text-xs bg-surface-800 text-slate-300 hover:text-white hover:bg-surface-700 px-3 py-1.5 rounded-full transition-colors"
+            className="text-xs bg-surface-container-high text-on-surface-variant hover:text-white hover:bg-surface-bright px-3 py-1.5 rounded-full transition-colors"
           >
             {q}
           </button>
@@ -185,21 +185,21 @@ function ChatInterface() {
           <div key={i} className={cn('flex gap-3', msg.role === 'user' ? 'flex-row-reverse' : '')}>
             <div className={cn(
               'w-8 h-8 rounded-full flex items-center justify-center shrink-0',
-              msg.role === 'assistant' ? 'bg-brand-600/20' : 'bg-surface-700',
+              msg.role === 'assistant' ? 'bg-primary-container/20' : 'bg-surface-bright',
             )}>
-              {msg.role === 'assistant' ? <Bot size={16} className="text-brand-400" /> : <User size={16} className="text-slate-300" />}
+              {msg.role === 'assistant' ? <Bot size={16} className="text-primary" /> : <User size={16} className="text-on-surface-variant" />}
             </div>
             <div className={cn(
               'max-w-[80%] rounded-2xl px-4 py-3 text-sm',
               msg.role === 'assistant'
-                ? 'bg-surface-800 text-slate-200 rounded-tl-sm'
-                : 'bg-brand-600 text-white rounded-tr-sm',
+                ? 'bg-surface-container-high text-on-surface rounded-tl-sm'
+                : 'bg-primary-container text-white rounded-tr-sm',
             )}>
               {msg.content || (isStreaming && i === messages.length - 1 ? (
                 <span className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </span>
               ) : '')}
             </div>

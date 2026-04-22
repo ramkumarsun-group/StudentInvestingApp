@@ -9,7 +9,7 @@ interface Props {
 export default function PortfolioMiniChart({ data }: Props) {
   if (!data || data.length === 0) {
     return (
-      <div className="h-24 flex items-center justify-center text-slate-600 text-sm">
+      <div className="h-24 flex items-center justify-center text-on-surface-variant text-sm">
         No history yet — start trading!
       </div>
     );

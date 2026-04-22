@@ -43,3 +43,8 @@ coverage/
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Playwright auth state
+apps/web/playwright/.auth/
+apps/web/playwright-report/
+apps/web/test-results/

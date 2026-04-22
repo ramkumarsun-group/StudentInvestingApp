@@ -35,12 +35,12 @@ describe('BottomNav', () => {
   it('active link (/learn) has primary color class', () => {
     // pathname mocked to /learn
     const html = renderToStaticMarkup(<BottomNav />);
-    expect(html).toContain('text-[#acc7ff]');
+    expect(html).toContain('text-primary');
   });
 
-  it('inactive links have outline color class', () => {
+  it('inactive links have on-surface-variant color class', () => {
     const html = renderToStaticMarkup(<BottomNav />);
-    expect(html).toContain('text-[#8b909f]');
+    expect(html).toContain('text-on-surface-variant');
   });
 
   it('has correct fixed bottom bar classes', () => {

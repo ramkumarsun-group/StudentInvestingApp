@@ -42,6 +42,7 @@ export default function DashboardPage() {
 
   const portfolioData = portfolio as { total_value: number; total_return_pct: number; virtual_cash: number } | undefined;
   const xpData = xp as { total_xp: number; current_level: number; level_name: string; xp_to_next_level: number } | undefined;
+  // P-06: use computeXpProgress for correct per-level progress (xpIntoLevel / xpNeeded)
   const xpProgress = xpData ? computeXpProgress(xpData.total_xp) : null;
   const streakData = streak as { current_streak: number; longest_streak: number } | undefined;
   const historyData = (history ?? []) as { value: number; date: string }[];
@@ -54,7 +55,7 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-slate-400 text-sm mt-0.5">Your investing overview</p>
+        <p className="text-on-surface-variant text-sm mt-0.5">Your investing overview</p>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_320px] gap-6">
@@ -65,7 +66,7 @@ export default function DashboardPage() {
             <div className="card p-5 md:col-span-2">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <p className="text-slate-400 text-sm">Portfolio Value</p>
+                  <p className="text-on-surface-variant text-sm">Portfolio Value</p>
                   <p className="text-3xl font-bold text-white mt-1">
                     {portfolioData ? formatUSD(portfolioData.total_value) : '—'}
                   </p>
@@ -83,32 +84,26 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               {/* XP Card */}
-              <div className="card p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap size={18} className="text-yellow-400" />
-                    <span className="font-semibold text-white">
-                      Lv.{xpProgress?.levelId ?? 1} {xpProgress?.levelName ?? 'Rookie'}
-                    </span>
-                  </div>
-                  <span className="text-sm text-slate-400">{xpProgress?.totalXp ?? 0} XP</span>
+              <div className="card p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap size={18} className="text-yellow-400" />
+                  <span className="font-semibold text-white">Level {xpProgress?.levelId ?? xpData?.current_level ?? 1}</span>
+                  <span className="text-on-surface-variant text-sm">{xpProgress?.levelName ?? xpData?.level_name}</span>
                 </div>
-                <div className="w-full h-2 bg-surface-800 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-1000"
-                    style={{
-                      width: `${xpProgress?.pct ?? 0}%`,
-                      backgroundColor: xpProgress?.badgeColor ?? '#9CA3AF',
-                    }}
+                    className="h-full bg-gradient-to-r from-primary-container to-primary rounded-full transition-all duration-1000"
+                    style={{ width: `${xpProgress?.pct ?? 0}%` }}
                   />
                 </div>
-                {xpProgress?.isMaxLevel ? (
-                  <p className="text-xs text-slate-400 text-right">Max Level</p>
-                ) : (
-                  <p className="text-xs text-slate-500 text-right">
-                    {xpProgress?.xpIntoLevel ?? 0}/{xpProgress?.xpNeeded ?? 500} XP to next level
-                  </p>
-                )}
+                <p className="text-xs text-on-surface-variant mt-1.5">
+                  {xpProgress
+                    ? xpProgress.isMaxLevel
+                      ? `${xpProgress.totalXp} XP — Max Level!`
+                      : `${xpProgress.xpIntoLevel} / ${xpProgress.xpNeeded} XP to next level`
+                    : '0 XP'
+                  }
+                </p>
               </div>
 
               {/* Streak Card */}
@@ -117,7 +112,7 @@ export default function DashboardPage() {
                   <Flame size={18} className="text-orange-400" />
                   <div>
                     <p className="font-semibold text-white">{streakData?.current_streak ?? 0} day streak</p>
-                    <p className="text-xs text-slate-500">Best: {streakData?.longest_streak ?? 0} days</p>
+                    <p className="text-xs text-on-surface-variant">Best: {streakData?.longest_streak ?? 0} days</p>
                   </div>
                 </div>
               </div>
@@ -131,7 +126,7 @@ export default function DashboardPage() {
           <div className="card p-5">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold text-white">Market Movers</h2>
-              <Link href="/trade" className="text-brand-400 text-sm hover:text-brand-300 flex items-center gap-1">
+              <Link href="/trade" className="text-primary text-sm hover:text-primary flex items-center gap-1">
                 Trade <ArrowRight size={14} />
               </Link>
             </div>
@@ -140,7 +135,7 @@ export default function DashboardPage() {
                 <Link
                   key={q.symbol}
                   href={`/trade?symbol=${q.symbol}`}
-                  className="bg-surface-800 hover:bg-surface-700 rounded-lg p-3 transition-colors"
+                  className="bg-surface-container-high hover:bg-surface-bright rounded-lg p-3 transition-colors"
                 >
                   <p className="font-semibold text-white text-sm">{q.symbol}</p>
                   <p className="text-white font-mono text-sm mt-1">{formatUSD(q.price)}</p>
@@ -156,10 +151,10 @@ export default function DashboardPage() {
           <div className="card p-5">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold text-white flex items-center gap-2">
-                <BookOpen size={18} className="text-brand-400" />
+                <BookOpen size={18} className="text-primary" />
                 Learning
               </h2>
-              <Link href="/learn" className="text-brand-400 text-sm hover:text-brand-300 flex items-center gap-1">
+              <Link href="/learn" className="text-primary text-sm hover:text-primary flex items-center gap-1">
                 All <ArrowRight size={14} />
               </Link>
             </div>
@@ -172,12 +167,12 @@ export default function DashboardPage() {
                   <div key={m.title} className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-slate-300 truncate">{m.title}</span>
-                        <span className="text-slate-500 ml-2 shrink-0">{pct}%</span>
+                        <span className="text-on-surface-variant truncate">{m.title}</span>
+                        <span className="text-on-surface-variant ml-2 shrink-0">{pct}%</span>
                       </div>
-                      <div className="w-full h-1.5 bg-surface-800 rounded-full">
+                      <div className="w-full h-1.5 bg-surface-container-high rounded-full">
                         <div
-                          className="h-full bg-brand-500 rounded-full"
+                          className="h-full bg-primary-container rounded-full"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -186,9 +181,9 @@ export default function DashboardPage() {
                 );
               })}
               {progressData.length === 0 && (
-                <p className="text-slate-500 text-sm">
+                <p className="text-on-surface-variant text-sm">
                   No modules started yet.{' '}
-                  <Link href="/learn" className="text-brand-400 hover:text-brand-300">
+                  <Link href="/learn" className="text-primary hover:text-primary">
                     Start learning →
                   </Link>
                 </p>

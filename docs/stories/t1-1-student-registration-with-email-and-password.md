@@ -1,6 +1,6 @@
 # Story T1.1: Student Registration with Email and Password
 
-Status: review
+Status: done
 
 ## Story
 

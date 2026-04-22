@@ -175,7 +175,7 @@ export default function TickerPage() {
               <div
                 className={cn(
                   'flex items-center gap-1 mt-1 text-sm font-medium',
-                  isPositive ? 'text-emerald-400' : 'text-rose-400',
+                  isPositive ? 'text-positive' : 'text-negative',
                 )}
               >
                 {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
@@ -185,7 +185,7 @@ export default function TickerPage() {
               </div>
             )}
             {quoteData && (
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-on-surface-variant mt-1">
                 Updated {new Date(quoteData.updatedAt).toLocaleTimeString()}
               </p>
             )}
@@ -200,8 +200,8 @@ export default function TickerPage() {
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
                   timeframe === tf
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-surface-800 text-slate-400 hover:text-slate-200',
+                    ? 'bg-primary-container text-white'
+                    : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface',
                 )}
               >
                 {tf}
@@ -231,8 +231,8 @@ export default function TickerPage() {
             className={cn(
               'flex-1 py-2 rounded-lg text-sm font-semibold transition-colors',
               side === 'buy'
-                ? 'bg-brand-600 text-white'
-                : 'bg-surface-800 text-slate-400 hover:text-slate-200',
+                ? 'bg-primary-container text-white'
+                : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface',
             )}
           >
             Buy
@@ -247,8 +247,8 @@ export default function TickerPage() {
             className={cn(
               'flex-1 py-2 rounded-lg text-sm font-semibold transition-colors',
               side === 'sell'
-                ? 'bg-rose-600 text-white'
-                : 'bg-surface-800 text-slate-400 hover:text-slate-200',
+                ? 'bg-negative text-white'
+                : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface',
             )}
           >
             Sell
@@ -259,7 +259,7 @@ export default function TickerPage() {
           <>
             {/* Available cash */}
             <div className="flex justify-between items-center mb-4 text-sm">
-              <span className="text-slate-400">Available Cash</span>
+              <span className="text-on-surface-variant">Available Cash</span>
               <span className="font-mono text-white font-medium">
                 {formatUSD(portfolioData?.virtual_cash ?? 0)}
               </span>
@@ -268,7 +268,7 @@ export default function TickerPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Quantity input */}
               <div>
-                <label className="block text-xs text-slate-400 mb-1" htmlFor="quantity">
+                <label className="block text-xs text-on-surface-variant mb-1" htmlFor="quantity">
                   Quantity
                 </label>
                 <input
@@ -282,26 +282,26 @@ export default function TickerPage() {
                     setOrderError(null);
                   }}
                   placeholder="0.00"
-                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-brand-500"
+                  className="w-full bg-surface-container-high border border-surface-bright rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-primary-container"
                 />
               </div>
 
               {/* Estimated total */}
-              <div className="flex justify-between items-center text-sm bg-surface-800 rounded-lg px-3 py-2">
-                <span className="text-slate-400">Est. Total (incl. 0.1% spread)</span>
+              <div className="flex justify-between items-center text-sm bg-surface-container-high rounded-lg px-3 py-2">
+                <span className="text-on-surface-variant">Est. Total (incl. 0.1% spread)</span>
                 <span className="font-mono text-white font-medium">
                   {formatUSD(estimatedBuyTotal)}
                 </span>
               </div>
 
               {/* Spread disclosure */}
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-on-surface-variant">
                 ±0.1% simulated spread applied to market orders — this reflects real-world bid/ask costs.
               </p>
 
               {/* Error message */}
               {orderError && (
-                <div className="flex items-center gap-2 text-rose-400 text-sm bg-rose-400/10 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 text-negative text-sm bg-negative/10 rounded-lg px-3 py-2">
                   <AlertCircle size={14} />
                   {orderError}
                 </div>
@@ -314,8 +314,8 @@ export default function TickerPage() {
                 className={cn(
                   'w-full py-3 rounded-lg font-semibold transition-colors',
                   orderMutation.isPending || !quoteData
-                    ? 'bg-brand-600 text-white opacity-50 cursor-not-allowed'
-                    : 'bg-brand-600 text-white hover:bg-brand-500',
+                    ? 'bg-primary-container text-white opacity-50 cursor-not-allowed'
+                    : 'bg-primary-container text-white hover:opacity-80',
                 )}
               >
                 {orderMutation.isPending ? 'Placing Order…' : `Buy ${ticker}`}
@@ -326,7 +326,7 @@ export default function TickerPage() {
           <>
             {/* Current holding display */}
             <div className="flex justify-between items-center mb-4 text-sm">
-              <span className="text-slate-400">You Own</span>
+              <span className="text-on-surface-variant">You Own</span>
               <span className="font-mono text-white font-medium">
                 {currentHolding ? `${currentHolding.quantity} shares` : "You don't hold this asset"}
               </span>
@@ -335,8 +335,8 @@ export default function TickerPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Quantity input */}
               <div>
-                <label className="block text-xs text-slate-400 mb-1" htmlFor="sell-quantity">
-                  Quantity{maxSellQty > 0 && <span className="text-slate-500 ml-1">(max {maxSellQty})</span>}
+                <label className="block text-xs text-on-surface-variant mb-1" htmlFor="sell-quantity">
+                  Quantity{maxSellQty > 0 && <span className="text-on-surface-variant ml-1">(max {maxSellQty})</span>}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -351,13 +351,13 @@ export default function TickerPage() {
                       setOrderError(null);
                     }}
                     placeholder="0.00"
-                    className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-rose-500"
+                    className="flex-1 bg-surface-container-high border border-surface-bright rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-outline"
                   />
                   {maxSellQty > 0 && (
                     <button
                       type="button"
                       onClick={() => setQuantity(String(maxSellQty))}
-                      className="px-3 py-2 bg-surface-700 text-slate-300 text-xs font-medium rounded-lg hover:bg-surface-600 transition-colors"
+                      className="px-3 py-2 bg-surface-bright text-on-surface-variant text-xs font-medium rounded-lg hover:bg-surface-container-high transition-colors"
                     >
                       Sell All
                     </button>
@@ -366,25 +366,25 @@ export default function TickerPage() {
               </div>
 
               {/* Estimated proceeds */}
-              <div className="flex justify-between items-center text-sm bg-surface-800 rounded-lg px-3 py-2">
-                <span className="text-slate-400">Est. Proceeds (after 0.1% spread)</span>
+              <div className="flex justify-between items-center text-sm bg-surface-container-high rounded-lg px-3 py-2">
+                <span className="text-on-surface-variant">Est. Proceeds (after 0.1% spread)</span>
                 <span className="font-mono text-white font-medium">
                   {formatUSD(estimatedSellProceeds)}
                 </span>
               </div>
 
               {/* Spread disclosure */}
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-on-surface-variant">
                 ±0.1% simulated spread applied to market orders — this reflects real-world bid/ask costs.
               </p>
 
               {/* Error message */}
               {orderError && (
-                <div className="flex items-center gap-2 text-rose-400 text-sm bg-rose-400/10 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 text-negative text-sm bg-negative/10 rounded-lg px-3 py-2">
                   <AlertCircle size={14} />
                   {orderError}
                   {orderErrorCode === 'INSUFFICIENT_HOLDINGS' && currentHolding && (
-                    <span className="ml-1 text-slate-400">
+                    <span className="ml-1 text-on-surface-variant">
                       (You hold {currentHolding.quantity} shares)
                     </span>
                   )}
@@ -398,8 +398,8 @@ export default function TickerPage() {
                 className={cn(
                   'w-full py-3 rounded-lg font-semibold transition-colors',
                   orderMutation.isPending || !quoteData || maxSellQty === 0
-                    ? 'bg-rose-600 text-white opacity-50 cursor-not-allowed'
-                    : 'bg-rose-600 text-white hover:bg-rose-500',
+                    ? 'bg-negative text-white opacity-50 cursor-not-allowed'
+                    : 'bg-negative text-white hover:opacity-90',
                 )}
               >
                 {orderMutation.isPending ? 'Placing Order…' : `Sell ${ticker}`}
@@ -413,7 +413,7 @@ export default function TickerPage() {
       <div className="card p-5">
         <h2 className="font-semibold text-white mb-4">Market News</h2>
         {newsData.length === 0 ? (
-          <p className="text-sm text-slate-500">News unavailable.</p>
+          <p className="text-sm text-on-surface-variant">News unavailable.</p>
         ) : (
           <div className="space-y-3">
             {newsData.map((article) => (
@@ -422,10 +422,10 @@ export default function TickerPage() {
                 href={article.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block hover:bg-surface-800/60 rounded-lg p-3 -mx-3 transition-colors"
+                className="block hover:bg-surface-container-high/60 rounded-lg p-3 -mx-3 transition-colors"
               >
                 <p className="text-sm font-medium text-white line-clamp-2">{article.title}</p>
-                <div className="flex gap-2 mt-1 text-xs text-slate-500">
+                <div className="flex gap-2 mt-1 text-xs text-on-surface-variant">
                   <span>{typeof article.source === 'string' ? article.source : article.source?.name ?? 'Unknown'}</span>
                   <span>·</span>
                   <span>{relativeTime(article.publishedAt)}</span>

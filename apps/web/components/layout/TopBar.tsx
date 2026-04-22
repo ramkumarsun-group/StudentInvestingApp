@@ -35,30 +35,30 @@ export default function TopBar() {
   }
 
   return (
-    <header className="h-14 bg-surface-900 border-b border-surface-800 flex items-center justify-between px-6">
+    <header className="h-14 bg-surface-container border-b border-surface-container-high flex items-center justify-between px-6">
       <div className="flex items-center gap-4">
         {xpData && (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-surface-800 rounded-full px-3 py-1">
+            <div className="flex items-center gap-1 bg-surface-container-high rounded-full px-3 py-1">
               <Zap size={14} className="text-yellow-400" />
               <span className="text-sm font-semibold text-yellow-400">Lv.{xpData.current_level}</span>
-              <span className="text-xs text-slate-500 ml-1">{xpData.level_name}</span>
+              <span className="text-xs text-on-surface-variant ml-1">{xpData.level_name}</span>
             </div>
             <div className="hidden sm:flex items-center gap-1.5">
-              <div className="w-24 h-1.5 bg-surface-800 rounded-full overflow-hidden">
+              <div className="w-24 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-brand-500 rounded-full transition-all"
+                  className="h-full bg-primary-container rounded-full transition-all"
                   style={{
                     width: `${Math.min(100, (xpData.total_xp / (xpData.total_xp + xpData.xp_to_next_level)) * 100)}%`,
                   }}
                 />
               </div>
-              <span className="text-xs text-slate-500">{xpData.total_xp} XP</span>
+              <span className="text-xs text-on-surface-variant">{xpData.total_xp} XP</span>
             </div>
           </div>
         )}
         {streakData && streakData.current_streak > 0 && (
-          <div className="flex items-center gap-1 bg-surface-800 rounded-full px-3 py-1">
+          <div className="flex items-center gap-1 bg-surface-container-high rounded-full px-3 py-1">
             <Flame size={14} className="text-orange-400" />
             <span className="text-sm font-semibold text-orange-400">{streakData.current_streak}</span>
           </div>
@@ -68,22 +68,22 @@ export default function TopBar() {
       <div className="relative">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="flex items-center gap-2 hover:bg-surface-800 px-3 py-2 rounded-lg transition-colors"
+          className="flex items-center gap-2 hover:bg-surface-container-high px-3 py-2 rounded-lg transition-colors"
         >
-          <div className="w-7 h-7 bg-brand-700 rounded-full flex items-center justify-center text-xs font-bold">
+          <div className="w-7 h-7 bg-primary-container rounded-full flex items-center justify-center text-xs font-bold">
             {session?.user?.name?.[0]?.toUpperCase() ?? session?.user?.email?.[0]?.toUpperCase() ?? '?'}
           </div>
-          <span className="text-sm text-slate-300 hidden sm:block">
+          <span className="text-sm text-on-surface-variant hidden sm:block">
             {session?.user?.name ?? session?.user?.email}
           </span>
-          <ChevronDown size={14} className="text-slate-500" />
+          <ChevronDown size={14} className="text-on-surface-variant" />
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-full mt-1 w-48 bg-surface-800 border border-surface-700 rounded-xl shadow-xl z-50">
+          <div className="absolute right-0 top-full mt-1 w-48 bg-surface-container-high border border-surface-bright rounded-xl shadow-xl z-50">
             <button
               onClick={handleSignOut}
-              className="w-full text-left px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-surface-700 rounded-xl transition-colors"
+              className="w-full text-left px-4 py-3 text-sm text-on-surface-variant hover:text-white hover:bg-surface-bright rounded-xl transition-colors"
             >
               Sign out
             </button>

@@ -27,13 +27,13 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">StudentInvest</h1>
-          <p className="text-slate-400 mt-2">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-on-surface">StudentInvest</h1>
+          <p className="text-on-surface-variant mt-2">Sign in to your account</p>
         </div>
         <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">Email</label>
               <input
                 type="email"
                 className="input"
@@ -44,7 +44,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+              <label className="block text-sm font-medium text-on-surface-variant mb-1">Password</label>
               <input
                 type="password"
                 className="input"
@@ -60,10 +60,10 @@ export default function LoginPage() {
           </form>
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-700" />
+              <span className="w-full border-t border-outline-variant" />
             </div>
-            <div className="relative flex justify-center text-xs text-slate-500">
-              <span className="bg-surface-900 px-2">or</span>
+            <div className="relative flex justify-center text-xs text-on-surface-variant">
+              <span className="bg-surface-container px-2">or</span>
             </div>
           </div>
           <button
@@ -79,9 +79,9 @@ export default function LoginPage() {
             </svg>
             Continue with Google
           </button>
-          <p className="text-center text-slate-400 mt-4 text-sm">
+          <p className="text-center text-on-surface-variant mt-4 text-sm">
             No account?{' '}
-            <Link href="/register" className="text-brand-400 hover:text-brand-300">
+            <Link href="/register" className="text-primary hover:text-primary">
               Create one free
             </Link>
           </p>
