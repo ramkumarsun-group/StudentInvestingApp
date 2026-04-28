@@ -1,39 +1,24 @@
 import { faker } from '@faker-js/faker';
+// P-10: types sourced from @student-investing/shared-types (AC5 compliance)
+import type {
+  StudentPayload,
+  TradePayload,
+  PortfolioSeedPayload,
+  HoldingPayload,
+} from '@student-investing/shared-types';
 
 /**
  * Test data factories for StockPlay E2E and integration tests.
  * All factories return plain objects suitable for seeding via POST /api/v1/test/seed.
  */
 
-export interface StudentPayload {
-  email: string;
-  password: string;
-  username: string;
-  displayName: string;
-  dateOfBirth: string; // ISO date — must be 18+ to avoid minor flag
-}
-
-export interface TradePayload {
-  symbol: string;
-  action: 'buy' | 'sell';
-  shares: number;
-}
-
-export interface PortfolioSeedPayload {
-  cashBalance: number;
-  holdings?: HoldingPayload[];
-}
-
-export interface HoldingPayload {
-  symbol: string;
-  assetType: 'stock' | 'etf' | 'crypto';
-  shares: number;
-  avgCost: number;
-}
+// Re-export types so consumers can import from this module without reaching into shared-types
+export type { StudentPayload, TradePayload, PortfolioSeedPayload, HoldingPayload };
 
 /**
  * Creates a student payload suitable for seeding.
  * DOB is always 20 years ago to avoid under-18 flag.
+ * P-12: displayName removed — no display_name column exists in the users table.
  */
 export function createStudent(overrides: Partial<StudentPayload> = {}): StudentPayload {
   const username = faker.internet.username().replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20);
@@ -44,7 +29,6 @@ export function createStudent(overrides: Partial<StudentPayload> = {}): StudentP
     email: faker.internet.email().toLowerCase(),
     password: 'Password123!',
     username,
-    displayName: faker.person.fullName(),
     dateOfBirth: dob.toISOString().split('T')[0],
     ...overrides,
   };

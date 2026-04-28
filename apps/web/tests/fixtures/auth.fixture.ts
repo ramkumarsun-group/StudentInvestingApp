@@ -29,12 +29,15 @@ export const test = base.extend<AuthFixtures>({
     });
     expect(seedRes.status(), `Seed failed: ${await seedRes.text()}`).toBe(201);
 
-    await use(student);
-
-    // Teardown — runs even if test fails
-    await request.delete(`${API_BASE}/test/teardown`, {
-      data: { email: student.email },
-    });
+    // P-04: try/finally ensures teardown runs even if use() throws (Dev Notes requirement)
+    try {
+      await use(student);
+    } finally {
+      // Teardown — always runs, even on test failure
+      await request.delete(`${API_BASE}/test/teardown`, {
+        data: { email: student.email },
+      });
+    }
   },
 
   studentToken: async ({ request, student }, use) => {
@@ -63,19 +66,19 @@ export { expect } from '@playwright/test';
 
 /**
  * Auth setup helper — called from auth.setup.ts to persist storageState.
- * Logs in with credentials and stores cookies/localStorage to playwright/.auth/student.json.
+ * Seeds the fixture student if not already present.
+ * P-09: removed unused `baseURL` param — API base is always resolved from PLAYWRIGHT_API_URL env var (API_BASE constant).
  */
 export async function setupStudentStorageState(
   request: APIRequestContext,
-  baseURL: string,
 ): Promise<void> {
   const student = createStudent({ email: 'e2e-fixture@stockplay.test' });
 
-  // Ensure fixture user exists (seed is idempotent — returns 200 if user exists)
+  // Ensure fixture user exists (seed is idempotent — returns 201 whether new or existing)
   const seedRes = await request.post(`${API_BASE}/test/seed`, {
     data: { users: [student] },
   });
-  if (seedRes.status() !== 201 && seedRes.status() !== 200) {
-    throw new Error(`Auth setup seed failed: ${await seedRes.text()}`);
+  if (seedRes.status() !== 201) {
+    throw new Error(`Auth setup seed failed (${seedRes.status()}): ${await seedRes.text()}`);
   }
 }

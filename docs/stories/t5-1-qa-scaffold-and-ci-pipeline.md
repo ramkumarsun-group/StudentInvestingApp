@@ -1,6 +1,6 @@
 # Story T5.1: QA Scaffold, Test Seed API, and CI Pipeline
 
-**Status:** review
+**Status:** done
 **Epic:** Thread 5 — QA Catch-up
 **Sprint Key:** t5-1-qa-scaffold-and-ci-pipeline
 **Date Prepared:** 2026-04-16
@@ -134,3 +134,4 @@ All 5 tasks complete. Full test suites still passing: **154 API tests, 99 web te
 ### Change Log
 
 - 2026-04-17: T5.1 implemented — Playwright scaffold, test seed/teardown API, GitHub Actions CI pipeline
+- 2026-04-27: T5.1 code review — 13 patches applied: virtual_cash column name, health URL, API build step, ESLint in lint job, try/finally teardown, seed response shape, quiz ON CONFLICT, playwright shard config removed, router-level NODE_ENV guard, unused baseURL param removed, shared-types for factories, displayName removed, dead 200 check removed

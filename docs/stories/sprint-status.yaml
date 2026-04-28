@@ -1,5 +1,5 @@
 # generated: 2026-03-24
-# last_updated: 2026-04-22 (T1.18 code review + full remediation done → moved to done; Thread 1 complete)
+# last_updated: 2026-04-27 (T5.1 code review + remediation done → Thread 5 complete)
 # project: StockPlay
 # project_key: NOKEY
 # tracking_system: file-system
@@ -36,7 +36,7 @@
 # - Steel thread structure: T1 → T2 → T3 → T4 (threads can overlap from Week 3)
 
 generated: 2026-03-24
-last_updated: 2026-04-22
+last_updated: 2026-04-27
 project: StockPlay
 project_key: NOKEY
 tracking_system: file-system
@@ -136,10 +136,11 @@ development_status:
   # 🧵 THREAD 5: QA Catch-up (Regression Safety for T1 + T2)
   # Goal: Playwright E2E scaffold + P0–P3 test suites + CI pipeline
   # Prerequisite: None (can start immediately; scaffold unblocks all other QA stories)
+  # Status: ✅ COMPLETE — all 5 stories done, CI pipeline hardened
   # ─────────────────────────────────────────────────────────────
-  thread-5: in-progress
+  thread-5: done
 
-  t5-1-qa-scaffold-and-ci-pipeline: review
+  t5-1-qa-scaffold-and-ci-pipeline: done
   t5-2-p0-critical-path-tests: done
   t5-3-p1-high-priority-tests: done
   t5-4-p2-edge-case-and-browser-compat-tests: done

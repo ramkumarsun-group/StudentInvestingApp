@@ -29,8 +29,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter api exec tsc --noEmit
-      - run: pnpm --filter web exec tsc --noEmit
+      - name: Type-check API
+        run: pnpm --filter api exec tsc --noEmit
+      - name: Type-check web
+        run: pnpm --filter web exec tsc --noEmit
+      - name: Lint API
+        run: pnpm --filter api lint
+      - name: Lint web
+        run: pnpm --filter web lint
 
   # ─── API Unit Tests ────────────────────────────────────────────────────────
   test-api:
@@ -165,12 +171,15 @@ jobs:
         run: pnpm --filter web exec playwright install chromium --with-deps
       - name: Run DB migrations
         run: pnpm --filter api db:migrate
+      - name: Build API
+        run: pnpm --filter api build
       - name: Start API server
         run: pnpm --filter api start &
         env:
           NODE_ENV: test
       - name: Wait for API
-        run: npx wait-on http://localhost:4000/api/v1/health --timeout 30000
+        # P-02: health endpoint is at /health (root), not /api/v1/health
+        run: npx wait-on http://localhost:4000/health --timeout 30000
       - name: Build web app
         run: pnpm --filter web build
       - name: Start web server

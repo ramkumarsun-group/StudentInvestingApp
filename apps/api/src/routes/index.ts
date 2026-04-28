@@ -99,6 +99,9 @@ router.get('/subscriptions/status', authMiddleware, subscription.getStatus);
 router.post('/subscriptions/webhook', subscription.handleWebhook);
 
 // ─── Test helpers (NODE_ENV=test only) ───────────────────────────────────────
-router.use('/test', testRoutes);
+// P-08: Guard at mount level (defence-in-depth). Handlers also guard individually via guardTestOnly().
+if (process.env.NODE_ENV === 'test') {
+  router.use('/test', testRoutes);
+}
 
 export default router;

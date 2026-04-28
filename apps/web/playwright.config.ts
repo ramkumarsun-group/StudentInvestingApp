@@ -20,10 +20,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  /* Shard config — run with --shard=1/2 and --shard=2/2 in CI */
-  shard: process.env.CI
-    ? { total: 2, current: Number(process.env.SHARD_INDEX ?? 1) }
-    : undefined,
+  // Sharding is controlled via --shard=N/2 CLI flag in CI (see .github/workflows/ci.yml).
+  // Do NOT set `shard` here — it is a CLI-only option and is silently ignored or conflicts
+  // with the CLI flag when both are present.
 
   projects: [
     /* Auth setup — runs once before all tests to create storage state */
