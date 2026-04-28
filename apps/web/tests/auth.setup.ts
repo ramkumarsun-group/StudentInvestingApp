@@ -12,11 +12,12 @@ const STORAGE_STATE = 'playwright/.auth/student.json';
 setup('authenticate as student', async ({ page, request }) => {
   const student = createStudent({ email: 'e2e-fixture@stockplay.test' });
 
-  // Seed fixture user (idempotent — 200 if already exists, 201 if new)
+  // Seed fixture user (idempotent — always returns 201 whether new or existing)
+  // P-13: removed dead 200 check — the seed endpoint always returns 201
   const seedRes = await request.post(`${API_BASE}/test/seed`, {
     data: { users: [student] },
   });
-  expect([200, 201]).toContain(seedRes.status());
+  expect(seedRes.status()).toBe(201);
 
   // Log in via UI to capture full storageState (cookies + localStorage)
   await page.goto('/login');

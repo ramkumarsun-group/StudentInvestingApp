@@ -89,7 +89,7 @@ router.post('/seed', async (req: Request, res: Response) => {
     const initCash = portfolioValue ?? 100_000;
     const returnPct = portfolioValue != null ? ((portfolioValue - 100_000) / 100_000) * 100 : 0;
     await db.query(
-      `INSERT INTO portfolios(user_id, cash_balance, total_value, total_return_pct)
+      `INSERT INTO portfolios(user_id, virtual_cash, total_value, total_return_pct)
        VALUES($1, $2, $3, $4)`,
       [userId, initCash, initCash, returnPct],
     );
@@ -177,20 +177,29 @@ router.post('/seed', async (req: Request, res: Response) => {
       await db.query<{ id: string }>('SELECT id FROM lessons WHERE module_id=$1 LIMIT 1', [moduleId])
     ).rows[0].id;
 
+    // P-06: ON CONFLICT DO NOTHING prevents duplicate quiz rows on re-seed/retry
     const quizRes = await db.query<{ id: string }>(
       `INSERT INTO quizzes(lesson_id, question_text, options, explanation, xp_reward)
        VALUES($1, 'Test question?',
          '[{"id":"opt_a","text":"Correct","is_correct":true},{"id":"opt_b","text":"Wrong","is_correct":false}]',
          'The correct answer is A.', 10)
-       RETURNING id`,
+       ON CONFLICT DO NOTHING RETURNING id`,
       [lessonId],
     );
-    const quizId = quizRes.rows[0].id;
+    // Re-fetch if quiz already existed
+    const quizId = quizRes.rows[0]?.id ?? (
+      await db.query<{ id: string }>('SELECT id FROM quizzes WHERE lesson_id=$1 LIMIT 1', [lessonId])
+    ).rows[0].id;
 
     testModuleIds = { moduleId, lessonId, quizId };
   }
 
-  return res.status(201).json({ seeded, ...(testModuleIds ? { testModule: testModuleIds } : {}) });
+  // AC2: single-user callers get { userId, email } at the top level for convenience;
+  // multi-user calls get { seeded: [...] }. Both shapes always include testModule when present.
+  const responseBase = seeded.length === 1
+    ? { userId: seeded[0].userId, email: seeded[0].email, seeded }
+    : { seeded };
+  return res.status(201).json({ ...responseBase, ...(testModuleIds ? { testModule: testModuleIds } : {}) });
 });
 
 /**
