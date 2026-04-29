@@ -195,6 +195,30 @@ New class portfolios with zero trades have `total_return_pct = NULL`. In the Red
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `GET /leaderboard/class/:classId` with enrolled student JWT → 200, returns ranked list of classmates only
+- [ ] `GET /leaderboard/class/:classId` with non-enrolled student JWT → 403
+- [ ] `GET /leaderboard/class/:classId` with teacher JWT → 403 (teacher is not enrolled as student)
+- [ ] `GET /leaderboard/class/:classId` with no enrolled students → 200, empty array
+- [ ] `refreshClassLeaderboards()` → Redis keys `leaderboard:class:{id}` populated for all active classes
+- [ ] `refreshClassLeaderboards()` → NULL `total_return_pct` handled as 0 (no NaN in Redis)
+- [ ] Class leaderboard does not include students from other classes
+
+### E2E Tests (Playwright)
+- [ ] Enrolled student visits Leaderboard → "My Class" tab visible and selected by default
+- [ ] Class tab shows only classmates, not global users
+- [ ] Non-enrolled student visits Leaderboard → only "Global" tab shown, no class tab
+- [ ] Class leaderboard empty state shows correct placeholder text
+- [ ] Global tab still works correctly after class tab added (no regression)
+- [ ] Class leaderboard refreshes every 5 minutes (mock timer in test or verify `refetchInterval` prop)
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

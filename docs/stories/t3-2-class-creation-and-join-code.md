@@ -175,6 +175,28 @@ The `classes` table has `is_active BOOLEAN` but `class_enrollments` does NOT —
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `POST /teacher/classes` → 201, returns `join_code` (6-char uppercase alphanumeric)
+- [ ] `POST /teacher/classes` with duplicate class name → still 201 (names are not unique)
+- [ ] `GET /teacher/classes` → returns all classes with `student_count` and `created_at`
+- [ ] `POST /teacher/classes` with student JWT → 403
+
+### E2E Tests (Playwright)
+- [ ] Teacher clicks "Create Class", fills name → modal transitions to success state showing join code
+- [ ] Join code in success state has a working copy button (clipboard write)
+- [ ] After closing modal, new class appears in My Classes grid with correct name, join code, student count (0), and creation date
+- [ ] Class card copy button copies join code and shows toast "Copied!"
+- [ ] Submitting create form with empty class name → inline error shown, API not called
+- [ ] Navigating to class detail page → join code shown with copy button
+- [ ] Copy button on class detail page copies code and shows toast
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

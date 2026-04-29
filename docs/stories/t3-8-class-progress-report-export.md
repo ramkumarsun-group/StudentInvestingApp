@@ -180,6 +180,31 @@ Verify `user_lesson_progress` has an `updated_at` column. If not, fall back to `
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `GET /teacher/classes/:classId/export` → `Content-Type: text/csv` header
+- [ ] `GET /teacher/classes/:classId/export` → `Content-Disposition` header contains correct filename (`{class-name}-report-{YYYY-MM-DD}.csv`)
+- [ ] `GET /teacher/classes/:classId/export` → CSV first row is the exact header string: `Display Name,Portfolio Return %,XP Total,Current Level,Modules Completed,Lessons Completed,Trades Placed,Streak Days,Last Active`
+- [ ] `GET /teacher/classes/:classId/export` with enrolled students → data rows match DB values
+- [ ] `GET /teacher/classes/:classId/export` with no enrolled students → only header row, no data rows
+- [ ] `GET /teacher/classes/:classId/export` with student JWT → 403
+- [ ] `GET /teacher/classes/:classId/export` for class owned by different teacher → 404
+- [ ] CSV values with commas in usernames → correctly quoted by `JSON.stringify`
+
+### E2E Tests (Playwright)
+- [ ] Teacher on class detail page sees "Export Report" button
+- [ ] Teacher clicks Export Report → file download triggered within 3 seconds
+- [ ] Downloaded filename matches `{class-name}-report-{YYYY-MM-DD}.csv` pattern
+- [ ] Export button shows loading state ("Exporting…") while request is in flight
+- [ ] Export button not clickable while loading (disabled state)
+- [ ] Export on empty class → CSV downloads with header only (no error)
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

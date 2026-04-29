@@ -211,6 +211,35 @@ The Sidebar already has a `Settings` link pointing to `/settings`. Creating the 
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `PATCH /auth/profile` with new unique username → 200, DB updated
+- [ ] `PATCH /auth/profile` with username already taken by another user → 409 `DUPLICATE_USERNAME`
+- [ ] `PATCH /auth/profile` with own current username → 200 (no conflict with self)
+- [ ] `PATCH /auth/profile` with invalid username format (spaces, special chars) → 400
+- [ ] `DELETE /auth/account` (student, no classes) with `confirmed: true` → 200, user row deleted
+- [ ] `DELETE /auth/account` (teacher with active classes) without `confirmed` → 200 with `warning: true`
+- [ ] `DELETE /auth/account` (teacher with active classes) with `confirmed: true` → 200, user deleted, classes set `is_active=false`
+- [ ] `DELETE /auth/account` → all related rows removed (portfolios, orders, xp_events, user_badges, user_lesson_progress, streaks, refresh_tokens, class_enrollments)
+- [ ] After `DELETE /auth/account`, subsequent JWT requests → 401
+
+### E2E Tests (Playwright)
+- [ ] Student navigates to `/settings` → Profile section with username input visible
+- [ ] Student updates username → success toast, sidebar/nav reflects new username on next load
+- [ ] Student enters taken username → inline error "This username is already taken"
+- [ ] Student enters username with invalid chars → inline error
+- [ ] Student initiates account deletion → confirmation dialog appears requiring "DELETE"
+- [ ] Student types wrong confirmation phrase → delete button stays disabled
+- [ ] Student types "DELETE" exactly → delete proceeds, user signed out, redirected to home
+- [ ] Teacher with active classes initiates deletion → warning shown about classes before confirmation step
+- [ ] Teacher confirms deletion → classes set inactive, account deleted, signed out
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

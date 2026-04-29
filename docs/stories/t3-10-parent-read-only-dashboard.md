@@ -294,6 +294,38 @@ MVP supports one guardian invite per student at a time. The `getPendingInvite` e
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `POST /guardian/invite` by minor student → 201, `guardian_links` row created with `status='pending'`, token returned
+- [ ] `POST /guardian/invite` by non-minor student → 403
+- [ ] `POST /guardian/invite` when pending invite already exists → 409
+- [ ] `POST /guardian/accept` with valid token + password → 201, guardian user created, link `status='accepted'`
+- [ ] `POST /guardian/accept` with expired token → 404
+- [ ] `POST /guardian/accept` with already-accepted token → 404 (status no longer 'pending')
+- [ ] `GET /guardian/dashboard` with guardian JWT → 200, returns student summary (no holdings detail)
+- [ ] `GET /guardian/dashboard` with student JWT → 403
+- [ ] `GET /guardian/dashboard` when student has deleted account → 404
+- [ ] Student account deletion → guardian link `status='revoked'` (or CASCADE removes link)
+
+### E2E Tests (Playwright)
+- [ ] Minor student visits Settings → "Guardian Access" section visible
+- [ ] Non-minor student visits Settings → "Guardian Access" section NOT shown
+- [ ] Minor student sends guardian invite → invite link displayed in Settings
+- [ ] Guardian visits accept link → password setup form shown
+- [ ] Guardian sets password → account created, redirected to login
+- [ ] Guardian logs in → sees guardian dashboard with student summary
+- [ ] Guardian dashboard shows: portfolio value, XP, streak, badges, lessons completed
+- [ ] Guardian dashboard does NOT show individual holdings or trade history
+- [ ] Guardian navigates to `/trade` → redirected to `/guardian`
+- [ ] Guardian navigates to `/portfolio` → redirected to `/guardian`
+- [ ] Guardian navigates to `/settings` → redirected to `/guardian`
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

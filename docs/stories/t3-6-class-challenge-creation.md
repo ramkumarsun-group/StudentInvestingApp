@@ -156,6 +156,31 @@ The existing `jobs/index.ts` likely already imports `node-cron`, `db`, and `redi
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `POST /teacher/classes/:classId/challenges` → 201, `class_id` set correctly from URL param (not null)
+- [ ] `POST /teacher/classes/:classId/challenges` → `status='scheduled'` in DB
+- [ ] `POST /teacher/classes/:classId/challenges` with student JWT → 403
+- [ ] `GET /teacher/classes/:classId/challenges` → returns all challenges for the class with `participant_count`
+- [ ] `updateChallengeStatuses()` cron → `scheduled` challenge with past `starts_at` → `status='active'`
+- [ ] `updateChallengeStatuses()` cron → `active` challenge with past `ends_at` → `status='completed'`
+- [ ] `updateChallengeStatuses()` cron → `completed` challenges not reverted to active
+
+### E2E Tests (Playwright)
+- [ ] Teacher opens class detail → "Create Challenge" button visible
+- [ ] Teacher fills challenge form with future start date → challenge created, appears in list with "Upcoming" status
+- [ ] Teacher fills challenge form with past start date → challenge created with "Active" status
+- [ ] Challenge form with end date before start date → validation error shown, not submitted
+- [ ] Challenge form with empty title → inline error shown
+- [ ] Created challenge appears in Challenges section on class detail page with correct status pill colour
+- [ ] Enrolled student visits Challenges page → upcoming challenge shows "Upcoming" badge, no Join button
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

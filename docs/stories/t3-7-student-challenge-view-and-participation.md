@@ -150,6 +150,33 @@ The existing challenges page already imports `dayjs` + `relativeTime`. Follow th
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `GET /challenges` → includes `scheduled` challenges for enrolled class
+- [ ] `GET /challenges` → includes `completed` challenges from last 7 days
+- [ ] `GET /challenges` → excludes `completed` challenges older than 7 days
+- [ ] `GET /challenges` → excludes class challenges for classes the student is NOT enrolled in
+- [ ] `POST /challenges/:id/join` on a `scheduled` challenge → 404 (cannot join upcoming)
+- [ ] `POST /challenges/:id/join` on a `completed` challenge → 404
+- [ ] `POST /challenges/:id/join` on an `active` challenge → 201
+- [ ] `GET /challenges/:id` → returns `participants` array and `myProgress` (null if not joined)
+
+### E2E Tests (Playwright)
+- [ ] Student visits Challenges page → active challenge shows Join button
+- [ ] Student visits Challenges page → upcoming challenge shows "Upcoming" pill, no Join button
+- [ ] Student visits Challenges page → completed challenge (within 7 days) shows "Completed" pill, no Join button
+- [ ] Student joins active challenge → "⚡ In Progress" state shown, Join button disappears
+- [ ] Student clicks into challenge → detail page shows ranked participants table
+- [ ] Student's own row in challenge detail is visually highlighted
+- [ ] Challenge detail page shows countdown / "Completed" banner based on end date
+- [ ] Student not enrolled in any class → only global challenges visible (no class challenges)
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

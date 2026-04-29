@@ -121,6 +121,30 @@ Always send uppercased: `joinCode.trim().toUpperCase()`. The backend also toUppe
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `POST /classes/join` with valid join code → 201, `class_enrollments` row created, class portfolio created with correct `virtual_cash`
+- [ ] `POST /classes/join` with invalid/non-existent join code → 404 with error message
+- [ ] `POST /classes/join` with inactive class join code → 404
+- [ ] `POST /classes/join` when already enrolled → 409 "Already enrolled"
+- [ ] `POST /classes/join` → global portfolio (`is_active=true`) unaffected; `GET /portfolio` still returns primary portfolio
+- [ ] `GET /classes/my` → returns enrolled classes with teacher name and student count
+- [ ] `GET /classes/my` when not enrolled → returns empty array
+
+### E2E Tests (Playwright)
+- [ ] Student (not enrolled) visits dashboard → "Join a class" prompt visible
+- [ ] Student enters valid join code → enrolled, success toast shown, class card appears on dashboard
+- [ ] Student enters invalid join code → inline error "Class not found — check your code and try again"
+- [ ] Student enters join code for already-joined class → error about one class per student
+- [ ] After enrolling, "Join a class" prompt replaced by "My Class" info card
+- [ ] Student's global portfolio and trade history unaffected after joining a class
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

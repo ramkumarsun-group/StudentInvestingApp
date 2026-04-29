@@ -146,6 +146,33 @@ NextAuth's token callback must forward this `role` field to `session.user.role` 
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API — `apps/api/src/controllers/auth.controller.test.ts`)
+- [ ] `POST /auth/register` with `role: 'teacher'` → 201, `users.role = 'teacher'` in DB
+- [ ] `POST /auth/register` with `role: 'teacher'` → JWT payload contains `role: 'teacher'`
+- [ ] `POST /auth/register` with `role: 'teacher'` → age gate NOT applied (DOB < 13 accepted)
+- [ ] `POST /auth/register` with `role: 'student'` → unchanged behaviour, `is_minor` still computed
+- [ ] `POST /auth/register` without `role` field → defaults to `'student'`
+- [ ] `POST /auth/register` with `role: 'admin'` → rejected (not in enum)
+- [ ] `GET /teacher/dashboard` with teacher JWT → 200, returns `{ class_count, student_count }`
+- [ ] `GET /teacher/dashboard` with student JWT → 403
+
+### E2E Tests (Playwright — `apps/web/tests/`)
+- [ ] Teacher registers via "I am a teacher" toggle → lands on `/teacher`, not `/dashboard`
+- [ ] Teacher logs in → sidebar shows "My Classes" not "Trade" or "Learn"
+- [ ] Teacher navigates to `/trade` directly → redirected to `/teacher`
+- [ ] Teacher navigates to `/portfolio` → redirected to `/teacher`
+- [ ] Teacher navigates to `/learn` → redirected to `/teacher`
+- [ ] Student registers → unchanged flow, lands on `/dashboard`
+- [ ] Teacher dashboard shows "Create your first class" empty state when no classes exist
+- [ ] Teacher dashboard shows class count + student count when classes exist
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used

@@ -135,6 +135,28 @@ Check that `user_lesson_progress.updated_at` exists (set via `updated_at TIMESTA
 
 ---
 
+## QA Tasks / Test Coverage
+
+### Unit / Integration Tests (API)
+- [ ] `GET /teacher/classes/:classId` → response includes `trades_placed` (integer) per student
+- [ ] `GET /teacher/classes/:classId` → response includes `last_active` (ISO date or null) per student
+- [ ] `GET /teacher/classes/:classId` → students ordered by `total_return_pct DESC NULLS LAST`
+- [ ] `GET /teacher/classes/:classId` with no enrolled students → `students: []`
+- [ ] `GET /teacher/classes/:classId` with student JWT (not class teacher) → 404
+
+### E2E Tests (Playwright)
+- [ ] Teacher opens class detail → table shows columns: Rank, Student, Portfolio Return %, XP, Modules Completed, Trades Placed, Last Active
+- [ ] Student with no trades shows `0` for Trades Placed and `—` for Last Active
+- [ ] Student with trades shows correct count and relative date ("2 hours ago")
+- [ ] Class with no enrolled students → empty state shows join code prominently with copy button
+- [ ] Summary stats grid reflects correct student count and averages
+- [ ] Teacher views class owned by a different teacher → not accessible (404/redirect)
+
+### QA Agent Record
+_to be filled by QA agent after dev completes_
+
+---
+
 ## Dev Agent Record
 
 ### Agent Model Used
