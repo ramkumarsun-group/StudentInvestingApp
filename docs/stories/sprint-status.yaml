@@ -104,14 +104,14 @@ development_status:
 
   t3-1-teacher-registration-and-dashboard: ready-for-dev
   t3-2-class-creation-and-join-code: ready-for-dev
-  t3-3-student-class-enrollment-via-join-code: backlog
-  t3-4-class-roster-and-progress-dashboard: backlog
-  t3-5-class-leaderboard: backlog
-  t3-6-class-challenge-creation: backlog
-  t3-7-student-challenge-view-and-participation: backlog
-  t3-8-class-progress-report-export: backlog
-  t3-9-user-profile-management-and-account-deletion: backlog
-  t3-10-parent-read-only-dashboard: backlog
+  t3-3-student-class-enrollment-via-join-code: ready-for-dev
+  t3-4-class-roster-and-progress-dashboard: ready-for-dev
+  t3-5-class-leaderboard: ready-for-dev
+  t3-6-class-challenge-creation: ready-for-dev
+  t3-7-student-challenge-view-and-participation: ready-for-dev
+  t3-8-class-progress-report-export: ready-for-dev
+  t3-9-user-profile-management-and-account-deletion: ready-for-dev
+  t3-10-parent-read-only-dashboard: ready-for-dev
 
   thread-3-retrospective: optional
 
