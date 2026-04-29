@@ -103,7 +103,7 @@ development_status:
   thread-3: in-progress
 
   t3-1-teacher-registration-and-dashboard: ready-for-dev
-  t3-2-class-creation-and-join-code: backlog
+  t3-2-class-creation-and-join-code: ready-for-dev
   t3-3-student-class-enrollment-via-join-code: backlog
   t3-4-class-roster-and-progress-dashboard: backlog
   t3-5-class-leaderboard: backlog
