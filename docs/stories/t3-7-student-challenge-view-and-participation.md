@@ -5,6 +5,8 @@
 **Sprint Key:** t3-7-student-challenge-view-and-participation
 **Date Prepared:** 2026-04-29
 
+> **Dev Agent Instruction:** Complete ALL Dev Tasks first, then switch to the QA persona (Quinn 🧪) and implement ALL QA Tasks before marking this story done. The story is not complete until both sections are fully checked off.
+
 ---
 
 ## Story
